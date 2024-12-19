@@ -20,7 +20,10 @@ app.layout = html.Div([
                 dl.TileLayer(
                     url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                 dl.GeoJSON(id='stats_layer', data=stats_data,
-                           options=dict(style=dict(color='blue', fillOpacity=0)))
+                           hoverStyle={'fillColor': '#00FF00',
+                                       'color': 'blue', 'fillOpacity': 0.5},
+                           style={'color': 'blue',  'fillOpacity': 0}
+                           )
             ],
                 center=[32, 34],
                 zoom=7,
