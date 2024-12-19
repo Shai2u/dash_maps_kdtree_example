@@ -24,7 +24,7 @@ app.layout = html.Div([
             ],
                 center=[32, 34],
                 zoom=7,
-                style={'height': '50vh'},
+                style={'height': '75vh'},
                 id='env_map',
                 dragging=True,
                 zoomControl=True,
