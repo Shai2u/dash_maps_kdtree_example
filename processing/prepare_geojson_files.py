@@ -37,7 +37,7 @@ if __name__ == "__main__":
         ['YISHUV_STAT11', 'Shem_Yishuv', 'Shem_Yishuv_English', 'geometry']]
 
     stats_name_df = pd.read_excel(stat_names)[['YISHUV_STA', 'sta_22_names']]
-    stats = stats.merge(stats_name_df, how='inner',
+    stats = stats.merge(stats_name_df, how='left',
                         left_on='YISHUV_STAT11', right_on='YISHUV_STA').drop(["YISHUV_STA"], axis=1)
 
     votes_df = pd.read_csv(votes_processed_path)
