@@ -5,10 +5,14 @@ import json
 import geopandas as gpd
 import pandas as pd
 pd.options.display.max_columns = 150
+
 # Load the data
+heb_dict_df = pd.read_csv('data/heb_english_dict.csv', index_col=0)
+col_rename = heb_dict_df.T.set_index(0)[1].to_dict()
 
 stats_data_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
 stats_data_gdf.to_crs('EPSG:4326', inplace=True)
+stats_data_gdf.rename(columns=col_rename, inplace=True)
 stats_data = stats_data_gdf.__geo_interface__
 
 app = Dash()
