@@ -6,6 +6,8 @@ import json
 
 import geopandas as gpd
 import pandas as pd
+
+from app_helper import get_info, style_handle, style, hover_style
 pd.options.display.max_columns = 150
 
 # Load the data
@@ -21,31 +23,6 @@ stats_data_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
 stats_data_gdf.to_crs('EPSG:4326', inplace=True)
 stats_data_gdf.rename(columns=col_rename, inplace=True)
 stats_data = stats_data_gdf.__geo_interface__
-
-
-def get_info(feature=None):
-    header = []
-    if not feature:
-        return header
-    return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
-                     html.Span(col_rename.get(feature["properties"]["max_label"]))]
-
-
-style_handle = assign("""function(feature, context){
-    const {classes, colorscale, style, colorProp} = context.hideout;  // get props from hideout
-    const value = feature.properties[colorProp];  // get value the determines the color
-    for (let i = 0; i < classes.length; ++i) {
-        if (value == classes[i]) {
-            style.fillColor = colorscale[i];  // set the fill color according to the class
-        }
-    }
-    return style;
-}""")
-
-
-style = {'color': 'white',  'fillOpacity': 0.5}
-
-hover_style = {'color': 'white',  'fillOpacity': 0.9}
 
 
 # Create info control.
