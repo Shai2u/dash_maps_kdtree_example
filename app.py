@@ -7,7 +7,7 @@ import json
 import geopandas as gpd
 import pandas as pd
 
-from app_helper import get_info, style_handle, style, hover_style
+from app_helper import style_handle, style, hover_style
 pd.options.display.max_columns = 150
 
 # Load the data
@@ -23,6 +23,14 @@ stats_data_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
 stats_data_gdf.to_crs('EPSG:4326', inplace=True)
 stats_data_gdf.rename(columns=col_rename, inplace=True)
 stats_data = stats_data_gdf.__geo_interface__
+
+
+def get_info(feature=None):
+    header = []
+    if not feature:
+        return header
+    return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
+                     html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
 
 # Create info control.
