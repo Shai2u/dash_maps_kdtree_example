@@ -68,7 +68,11 @@ def generate_random_barplot(feature=None):
 
     # Select statistical area and select only the relevant columns, sort by votes
     selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
-                                  == feature_id].iloc[0]['labor':]
+                                  == feature_id].iloc[0]
+    # Get title name (city + stat name)
+    stat_name = f"{selected_row['Shem_Yishuv']} {selected_row['sta_22_names']}"[
+        0:35]
+    selected_row = selected_row['labor':]
     selected_row.drop(['geometry', 'max_label'], inplace=True)
     selected_row.sort_values(ascending=False, inplace=True)
 
@@ -83,10 +87,10 @@ def generate_random_barplot(feature=None):
     values = top_ten.values
     # Create a bar plot
     fig = px.bar(x=categories, y=values, labels={
-        'x': '', 'y': ''}, color=categories, color_discrete_map=colors_dict2)
+        'x': '', 'y': ''}, color=categories, color_discrete_map=colors_dict2, title=stat_name)
     fig.update_layout(
         xaxis_tickangle=-90,
-        yaxis=dict(range=[0, top_ten.max() if top_ten.max()
+        yaxis=dict(range=[0, top_ten.max()+0.1 if top_ten.max()
                    > 0.5 else 0.5], visible=False),
         height=800,
         showlegend=False,
@@ -96,6 +100,7 @@ def generate_random_barplot(feature=None):
     )
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
+    fig.update_layout(title_y=0.9, title_x=0.95)
     return fig
 
 
