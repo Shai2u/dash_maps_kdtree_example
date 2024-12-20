@@ -46,26 +46,32 @@ app = Dash(title="Similar to me")
 app.layout = html.Div([
     html.Div(
         [
-            dl.Map([
-                dl.TileLayer(
-                    url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                dl.GeoJSON(id='stats_layer', data=stats_data,
-                           hoverStyle=hover_style,
-                              style=style_handle,
-                              hideout=dict(
-                                  colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
-                           ),
-                info
-            ],
-                center=[32, 34.9],
-                zoom=12,
-                style={'height': '75vh'},
-                id='env_map',
-                dragging=True,
-                zoomControl=True,
-                scrollWheelZoom=True,
-                doubleClickZoom=True,
-                boxZoom=True,
+            html.Div(['Hello Wolrd, Hello Wolrd,Hello Wolrd, Hello Wolrd'], style={
+                     'width': '30%', 'display': 'inline-block', 'margin-right': '2%'}),
+            html.Div([
+                dl.Map([
+                    dl.TileLayer(
+                        url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                    dl.GeoJSON(id='stats_layer', data=stats_data,
+                               hoverStyle=hover_style,
+                               style=style_handle,
+                               hideout=dict(
+                                   colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
+                               ),
+                    info
+                ],
+                    center=[32, 34.9],
+                    zoom=12,
+                    style={'height': '75vh'},
+                    id='env_map',
+                    dragging=True,
+                    zoomControl=True,
+                    scrollWheelZoom=True,
+                    doubleClickZoom=True,
+                    boxZoom=True,
+                )
+
+            ], style={'width': '64%', 'display': 'inline-block', 'margin-left': '2%'}
             )
         ],
     ),
