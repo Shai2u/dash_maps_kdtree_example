@@ -112,6 +112,7 @@ app.layout = html.Div([
                     dl.GeoJSON(id='stats_layer', data=stats_data,
                                hoverStyle=hover_style,
                                style=style_handle,
+                               zoomToBoundsOnClick=True,
                                hideout=dict(
                                    colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
                                ),
