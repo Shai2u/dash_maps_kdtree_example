@@ -28,10 +28,12 @@ stats_data_gdf.to_crs('EPSG:4326', inplace=True)
 stats_data = stats_data_gdf.__geo_interface__
 
 
-def get_info(feature=None):
+# Create info control.
+def get_info(feature=None, col_rename=col_rename):
     header = []
-    if not feature:
-        return header
+    if feature is None:
+        return
+
     return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
