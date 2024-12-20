@@ -95,7 +95,7 @@ def generate_random_barplot(feature=None):
         yaxis_showgrid=False
     )
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
-
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
     return fig
 
 
@@ -104,7 +104,7 @@ app.layout = html.Div([
     html.Div(
         [
             html.Div([dcc.Graph(id='elections_barplot')], style={
-                     'width': '30%', 'display': 'inline-block', 'margin-right': '2%'}),
+                     'width': '20%', 'display': 'inline-block', 'margin-right': '2%'}),
             html.Div([
                 dl.Map([
                     dl.TileLayer(
@@ -128,7 +128,7 @@ app.layout = html.Div([
                     boxZoom=True,
                 )
 
-            ], style={'width': '64%', 'display': 'inline-block', 'margin-left': '2%'}
+            ], style={'width': '74%', 'display': 'inline-block', 'margin-left': '2%'}
             )
         ],
     ),
