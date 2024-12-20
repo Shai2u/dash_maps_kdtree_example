@@ -18,3 +18,9 @@ style_handle = assign("""function(feature, context){
 style = {'color': 'white',  'fillOpacity': 0.9, 'weight': 1.5}
 
 hover_style = {'color': 'white',  'fillOpacity': 0.5, 'weight': 3}
+
+map_analysis_radio_options = [
+    {'label': 'Who Won', 'value': 'who_won'},
+    {'label': 'Kdtree', 'value': 'kdtree'},
+    {'label': 'Kmeans', 'value': 'kmeans'}
+]

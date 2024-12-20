@@ -7,7 +7,7 @@ import json
 import geopandas as gpd
 import pandas as pd
 
-from app_helper import style_handle, style, hover_style
+from app_helper import style_handle, style, hover_style, map_analysis_radio_options
 import numpy as np
 import plotly.express as px
 
@@ -103,13 +103,32 @@ def generate_random_barplot(feature=None):
     fig.update_layout(title_y=0.9, title_x=0.95)
     return fig
 
+    # # Create two divs in the same line
+    # div1 = html.Div("Div 1", style={'width': '50%', 'display': 'inline-block', 'backgroundColor': 'lightblue'})
+    # div2 = html.Div("Div 2", style={'width': '50%', 'display': 'inline-block', 'backgroundColor': 'lightgreen'})
 
+
+    # # Add the divs to the layout
+    # app.layout.children.append(html.Div([div1, div2]))
 app = Dash(title="Similar to me")
-app.layout = html.Div([
+app.css.append_css({
+    'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
+})
+app.layout = html.Div(children=[
     html.Div(
         [
-            html.Div([dcc.Graph(id='elections_barplot')], style={
-                     'width': '20%', 'display': 'inline-block', 'margin-right': '2%'}),
+            html.Div([
+                html.H4("Map Analysis Options"),
+                dcc.RadioItems(
+                    id='raio_map_analysis',
+                    options=map_analysis_radio_options,
+                    value='who_won',
+                    labelStyle={'display': 'inline-block',
+                                'margin-right': '10px'}
+                ),
+                dcc.Graph(id='elections_barplot')], style={
+                    'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
+                'minWidth': '200px', 'margin-right': '2%'}),
             html.Div([
                 dl.Map([
                     dl.TileLayer(
@@ -134,7 +153,7 @@ app.layout = html.Div([
                     boxZoom=True,
                 )
 
-            ], style={'width': '74%', 'display': 'inline-block', 'margin-left': '2%'}
+            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'minWidth': '600px', 'margin-left': '2%'}
             )
         ],
     ),

@@ -10,3 +10,16 @@
   margin: 0 0 5px;
   color: #777;
 }
+body {
+  font-family: "Roboto", sans-serif; /* Clean and professional font */
+}
+
+/* Optional: Set a specific font for headers or special elements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Roboto", sans-serif; /* Clean and professional font */
+}
