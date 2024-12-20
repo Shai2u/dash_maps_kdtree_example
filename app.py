@@ -133,6 +133,8 @@ app.layout = html.Div(children=[
                 dl.Map([
                     dl.TileLayer(
                         url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                    dl.LocateControl(
+                        locateOptions={'enableHighAccuracy': True}),
                     dl.GeoJSON(id='stats_layer', data=stats_data,
                                hoverStyle=hover_style,
                                style=style_handle,
