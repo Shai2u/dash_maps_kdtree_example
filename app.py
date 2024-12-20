@@ -20,6 +20,7 @@ stats_data_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
 # Setting up dictionaries and classes for the map
 col_rename = heb_dict_df.T.set_index(0)[1].to_dict()
 colors_dict = heb_dict_df.T.set_index(0).loc['party_1':][2].to_dict()
+colors_dict2 = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()
 classes = list(colors_dict.keys())
 colorscale = list(colors_dict.values())
 
@@ -33,6 +34,21 @@ stats_data = stats_data_gdf.__geo_interface__
 
 # Create info control.
 def get_info(feature=None, col_rename=col_rename):
+    """
+    Generate information about a given feature.
+
+    Parameters
+    ----------
+    feature : dict, optional
+        A dictionary representing a feature with properties. Default is None.
+    col_rename : dict
+        A dictionary used to rename columns based on feature properties.
+
+    Returns
+    -------
+    list
+        A list containing HTML elements with information about the feature.
+    """
     header = []
     if feature is None:
         return
@@ -45,14 +61,41 @@ info = html.Div(children=get_info(), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
-def generate_random_barplot():
+def generate_random_barplot(feature=None):
+    feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
+    if feature is not None:
+        feature_id = feature["properties"]["YISHUV_STAT11"]
+
+    # Select statistical area and select only the relevant columns, sort by votes
+    selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
+                                  == feature_id].iloc[0]['labor':]
+    selected_row.drop(['geometry', 'max_label'], inplace=True)
+    selected_row.sort_values(ascending=False, inplace=True)
+
+    # Convert to percent
+    percent = selected_row.values/selected_row.values.sum()
+
+    # Prepare barplot
+    top_ten = pd.Series(percent[0:6], index=selected_row.index[0:6])
+    top_ten = top_ten[top_ten.values > 0]
     # Generate random data
-    categories = [f'Category {chr(65 + i)}' for i in range(10)]
-    values = np.random.randint(1, 100, size=len(categories))
+    categories = top_ten.index
+    values = top_ten.values
     # Create a bar plot
     fig = px.bar(x=categories, y=values, labels={
-        'x': 'Category', 'y': 'Value'}, title='Random Bar Plot')
-    fig.update_layout(xaxis_tickangle=-90)
+        'x': '', 'y': ''}, color=categories, color_discrete_map=colors_dict2)
+    fig.update_layout(
+        xaxis_tickangle=-90,
+        yaxis=dict(range=[0, top_ten.max() if top_ten.max()
+                   > 0.5 else 0.5], visible=False),
+        height=800,
+        showlegend=False,
+        template='plotly_white',
+        xaxis_showgrid=False,
+        yaxis_showgrid=False
+    )
+    fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
+
     return fig
 
 
@@ -93,14 +136,14 @@ app.layout = html.Div([
 ])
 
 
-@app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
+@ app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
 def info_hover(feature):
     return get_info(feature)
 
 
-@app.callback(Output('elections_barplot', 'figure'), Input('env_map', 'clickData'))
+@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'))
 def update_barplot(clickData):
-    return generate_random_barplot()
+    return generate_random_barplot(clickData)
 
 
 if __name__ == '__main__':
