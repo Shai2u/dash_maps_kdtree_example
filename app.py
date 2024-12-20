@@ -38,7 +38,6 @@ def get_info(feature=None, col_rename=col_rename):
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
 
-# Create info control.
 info = html.Div(children=get_info(), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
