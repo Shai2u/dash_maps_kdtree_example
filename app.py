@@ -8,6 +8,9 @@ import geopandas as gpd
 import pandas as pd
 
 from app_helper import style_handle, style, hover_style
+import numpy as np
+import plotly.express as px
+
 pd.options.display.max_columns = 150
 
 # Load the data
@@ -42,11 +45,22 @@ info = html.Div(children=get_info(), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
+def generate_random_barplot():
+    # Generate random data
+    categories = [f'Category {chr(65 + i)}' for i in range(10)]
+    values = np.random.randint(1, 100, size=len(categories))
+    # Create a bar plot
+    fig = px.bar(x=categories, y=values, labels={
+        'x': 'Category', 'y': 'Value'}, title='Random Bar Plot')
+    fig.update_layout(xaxis_tickangle=-90)
+    return fig
+
+
 app = Dash(title="Similar to me")
 app.layout = html.Div([
     html.Div(
         [
-            html.Div(['Hello Wolrd, Hello Wolrd,Hello Wolrd, Hello Wolrd'], style={
+            html.Div([dcc.Graph(id='elections_barplot')], style={
                      'width': '30%', 'display': 'inline-block', 'margin-right': '2%'}),
             html.Div([
                 dl.Map([
@@ -82,6 +96,11 @@ app.layout = html.Div([
 @app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
 def info_hover(feature):
     return get_info(feature)
+
+
+@app.callback(Output('elections_barplot', 'figure'), Input('env_map', 'clickData'))
+def update_barplot(clickData):
+    return generate_random_barplot()
 
 
 if __name__ == '__main__':
