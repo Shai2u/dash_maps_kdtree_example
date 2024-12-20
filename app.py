@@ -42,7 +42,6 @@ app = Dash(title="Similar to me")
 app.layout = html.Div([
     html.Div(
         [
-            'hello World',
             dl.Map([
                 dl.TileLayer(
                     url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
