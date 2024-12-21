@@ -5,7 +5,7 @@ from dash_extensions.javascript import arrow_function, assign
 from scipy.spatial import KDTree
 import geopandas as gpd
 import pandas as pd
-from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options
+from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kde_colorscale, kde_style_handle
 import numpy as np
 import plotly.express as px
 import json
@@ -189,17 +189,22 @@ def info_hover(feature):
     return get_info(feature)
 
 
-@ app.callback(Output('elections_barplot', 'figure'), Output('stats_layer', 'hideout'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
+@ app.callback(Output('elections_barplot', 'figure'), Output('stats_layer', 'style'), Output('stats_layer', 'hideout'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
 def update_barplot(clickData, raio_map_analysis):
     hideout = dict(colorscale=colorscale, classes=classes,
                    style=style, hoverStyle=hover_style, colorProp="max_label")
 
     if raio_map_analysis == 'who_won':
-        return generate_random_barplot(clickData), hideout
+        return generate_random_barplot(clickData), won_style_handle,  hideout
     if map_analysis_radio_options == 'kdtree':
-        return {}, hideout
+        print('kde Tree')
+        hideout['colorscale'] = kde_colorscale
+        hideout['classes'] = kde_classes
+        hideout['colorProp'] = 'kde_distnace'
+
+        return {}, kde_style_handle, hideout
     else:
-        return {}, hideout
+        return {}, won_style_handle, hideout
 
 
 if __name__ == '__main__':
