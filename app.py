@@ -12,10 +12,6 @@ import json
 
 pd.options.display.max_columns = 150
 
-# stats_data_gdf['kde_distnace'].hist()
-
-# Create info control.
-
 
 # Load the data
 heb_dict_df = pd.read_csv('data/heb_english_dict.csv', index_col=0)
