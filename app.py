@@ -103,13 +103,7 @@ def generate_random_barplot(feature=None):
     fig.update_layout(title_y=0.9, title_x=0.95)
     return fig
 
-    # # Create two divs in the same line
-    # div1 = html.Div("Div 1", style={'width': '50%', 'display': 'inline-block', 'backgroundColor': 'lightblue'})
-    # div2 = html.Div("Div 2", style={'width': '50%', 'display': 'inline-block', 'backgroundColor': 'lightgreen'})
 
-
-    # # Add the divs to the layout
-    # app.layout.children.append(html.Div([div1, div2]))
 app = Dash(title="Similar to me")
 app.css.append_css({
     'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
