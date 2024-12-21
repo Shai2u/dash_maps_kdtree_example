@@ -5,7 +5,7 @@ from dash_extensions.javascript import arrow_function, assign
 from scipy.spatial import KDTree
 import geopandas as gpd
 import pandas as pd
-from app_helper import style_handle, style, hover_style, map_analysis_radio_options
+from app_helper import won_style_handle, won_style, won_hover_style, map_analysis_radio_options
 import numpy as np
 import plotly.express as px
 import json
@@ -157,11 +157,11 @@ app.layout = html.Div(children=[
                     dl.LocateControl(
                         locateOptions={'enableHighAccuracy': True}),
                     dl.GeoJSON(id='stats_layer', data=stats_data,
-                               hoverStyle=hover_style,
-                               style=style_handle,
+                               hoverStyle=won_hover_style,
+                               style=won_style_handle,
                                zoomToBoundsOnClick=True,
                                hideout=dict(
-                                   colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
+                                   colorscale=colorscale, classes=classes, style=won_style, hoverStyle=won_hover_style, colorProp="max_label")
                                ),
                     info
                 ],
@@ -192,7 +192,7 @@ def info_hover(feature):
 @ app.callback(Output('elections_barplot', 'figure'), Output('stats_layer', 'hideout'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
 def update_barplot(clickData, raio_map_analysis):
     hideout = dict(colorscale=colorscale, classes=classes,
-                   style=style, hoverStyle=hover_style, colorProp="max_label")
+                   style=won_style, hoverStyle=won_hover_style, colorProp="max_label")
 
     if raio_map_analysis == 'who_won':
         return generate_random_barplot(clickData), hideout
