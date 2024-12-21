@@ -168,9 +168,15 @@ def info_hover(feature):
     return get_info(feature)
 
 
-@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'))
-def update_barplot(clickData):
-    return generate_random_barplot(clickData)
+@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
+def update_barplot(clickData, raio_map_analysis):
+
+    if raio_map_analysis == 'who_won':
+        return generate_random_barplot(clickData)
+    if map_analysis_radio_options == 'kdtree':
+        return {}
+    else:
+        return {}
 
 
 if __name__ == '__main__':
