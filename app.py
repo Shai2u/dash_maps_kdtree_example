@@ -2,16 +2,20 @@ from dash import Dash, dcc, html, Input, Output
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
 from dash_extensions.javascript import arrow_function, assign
-import json
-
+from scipy.spatial import KDTree
 import geopandas as gpd
 import pandas as pd
-
 from app_helper import style_handle, style, hover_style, map_analysis_radio_options
 import numpy as np
 import plotly.express as px
+import json
 
 pd.options.display.max_columns = 150
+
+# stats_data_gdf['kde_distnace'].hist()
+
+# Create info control.
+
 
 # Load the data
 heb_dict_df = pd.read_csv('data/heb_english_dict.csv', index_col=0)
@@ -29,10 +33,37 @@ stats_data_gdf.rename(columns=col_rename, inplace=True)
 stats_data_gdf['sta_22_names'] = stats_data_gdf['sta_22_names'].str.replace(
     'No Name', '')
 stats_data_gdf.to_crs('EPSG:4326', inplace=True)
+
+
+def get_kdtree(stat_filter=stats_data_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_gdf.copy()):
+
+    kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == stat_filter].iloc[0]
+    kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+                       'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+                                          'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'])
+    # 3. Normalize the data
+    kde_df = kde_df.apply(
+        lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
+    kdf_filter_row = (kdf_filter_row/kdf_filter_row['bzb']).drop('bzb')
+
+    # random_stat = kde_df.sample(1).values
+    # Build the KDTree
+    tree = KDTree(kde_df.values)
+
+    # Query KDTree for the 3 nearest neighbors (including the row itself)
+    distances, indices = tree.query(kdf_filter_row.values, k=len(kde_df))
+
+    # Retrieve nearest rows using the indices
+    gdf_kde = gdf.iloc[indices].copy()
+    gdf_kde['kde_distnace'] = distances
+    return gdf_kde
+
+
+stats_data_gdf = get_kdtree()
 stats_data = stats_data_gdf.__geo_interface__
 
 
-# Create info control.
 def get_info(feature=None, col_rename=col_rename):
     """
     Generate information about a given feature.
