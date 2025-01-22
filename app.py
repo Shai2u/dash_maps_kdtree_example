@@ -171,7 +171,7 @@ app.layout = html.Div(children=[
 
                 ],style={
                     'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
-                dcc.Graph(id='elections_barplot')], style={
+                dcc.Graph(id='elections_barplot'), html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}) ], style={
                     'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
                 'minWidth': '200px', 'margin-right': '2%'}),
             html.Div([
@@ -213,14 +213,14 @@ app.layout = html.Div(children=[
 def info_hover(feature):
     return get_info(feature)
 
-@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Input('raio_map_analysis', 'value'))
+@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Input('raio_map_analysis', 'value'))
 def controller(radioButton):
     if radioButton == 'who_won':
-        return [{'display':'none'},{'display':'none'}]
+        return [{'display':'none'},{'display':'none'}, {'display':'none'}]
     elif radioButton == 'kdtree':
-        return [{'width': '60%', 'display':'block'}, {'display':'none'}]
+        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}]
     else:
-        return [{'display':'none'}, {'width': '60%', 'display':'block'}]
+        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}]
 
 
 @ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), State('elections_barplot', 'figure'))
@@ -285,5 +285,29 @@ def update_map(map_layers, map_json, clickData, radio_map_option):
 
     return map_layers
 
+
+@ app.callback(Output('kde_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('near_cluster', 'value'))
+def update_near_clster_bar(map_json, kdtree_distance):
+    # Convert GeoJSON data to GeoDataFrame
+    gdf = gpd.GeoDataFrame.from_features(map_json['features'])
+    gdf = gdf[gdf['kde_distnace']>0].reset_index(drop=True)
+    # Generate a barplot based on the KDE distances
+    gdf_sorted = gdf.sort_values(by='kde_distnace').iloc[0:kdtree_distance]
+    gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names'] 
+    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title='Top 10 Nearest Clusters')
+    fig.update_layout(
+        xaxis_tickangle=-90,
+        yaxis=dict(visible=True),
+        height=400,
+        showlegend=False,
+        template='plotly_white',
+        xaxis_showgrid=False,
+        yaxis_showgrid=False
+    )
+    fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
+    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+    return fig
+    # Generate a sample barplot
+   
 if __name__ == '__main__':
     app.run_server(debug=True)
