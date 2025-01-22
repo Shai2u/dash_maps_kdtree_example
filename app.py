@@ -120,7 +120,7 @@ def generate_barplot(feature=None):
         xaxis_tickangle=-90,
         yaxis=dict(range=[0, top_ten.max()+0.1 if top_ten.max()
                    > 0.5 else 0.5], visible=False),
-        height=800,
+        height=500,
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
@@ -236,8 +236,8 @@ def update_barplot(clickData, fig):
         return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
-def update_map(map_layers, map_json, clickData, radio_map_option):
+@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'))
+def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance):
     hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     if clickData is not None:
@@ -266,10 +266,15 @@ def update_map(map_layers, map_json, clickData, radio_map_option):
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
             hideout['colorProp'] = 'kde_distnace'
-            min_, max_ = stats_map_data_gdf['kde_distnace'].min(), stats_map_data_gdf['kde_distnace'].max()
+            gdf = stats_map_data_gdf.copy()
+            gdf = gdf.sort_values(by='kde_distnace').reset_index(drop=True)
+            gdf = gdf.iloc[0:kdtree_distance+1]
+            min_, max_ = gdf['kde_distnace'].min(), gdf['kde_distnace'].max()
+            stats_data = gdf.__geo_interface__
             classes_colormap = np.linspace(min_, max_, num=8)
             ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
             colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
+            
             map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                         dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
                         dl.GeoJSON(id='stats_layer', data=stats_data,
@@ -294,11 +299,11 @@ def update_near_clster_bar(map_json, kdtree_distance):
     # Generate a barplot based on the KDE distances
     gdf_sorted = gdf.sort_values(by='kde_distnace').iloc[0:kdtree_distance]
     gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names'] 
-    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title='Top 10 Nearest Clusters')
+    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern')
     fig.update_layout(
         xaxis_tickangle=-90,
         yaxis=dict(visible=True),
-        height=400,
+        height=500,
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
