@@ -32,16 +32,8 @@ style = {'color': 'white',  'fillOpacity': 0.9, 'weight': 1.5}
 hover_style = {'color': 'white',  'fillOpacity': 0.5, 'weight': 3}
 
 kde_classes = [0, 0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 0.84]
-kde_colorscale = [
-    '#005a32'
-    '#238443',
-    '#41ab5d',
-    '#78c679',
-    '#addd8e',
-    '#d9f0a3',
-    '#f7fcb9',
-    '#ffffe5',
-    ]
+kde_colorscale = ['#112A32', '#118443', '#41AB5D', '#78C679', '#ADDD8E', '#D9F0A3', '#F7FCB9', '#FFFFE5',]
+
 map_analysis_radio_options = [
     {'label': 'Who Won', 'value': 'who_won'},
     {'label': 'Kdtree', 'value': 'kdtree'},
