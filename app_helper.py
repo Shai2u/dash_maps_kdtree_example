@@ -4,13 +4,15 @@ from dash import Dash, dcc, html, Input, Output
 
 
 won_style_handle = assign("""function(feature, context){
-    const {classes, colorscale, style, colorProp} = context.hideout;  // get props from hideout
-    const value = feature.properties[colorProp];  // get value the determines the color
-    for (let i = 0; i < classes.length; ++i) {
-        if (value >= classes[i]) {
-            style.fillColor = colorscale[i];  // set the fill color according to the class
-        }
-    }
+    const {color_dict, style, win_party} = context.hideout;  // get props from hideout
+    console.log(win_party)
+    console.log('in')
+
+    console.log(color_dict)
+    const value = feature.properties[win_party];  // get value the determines the color
+    console.log(value)
+    style.fillColor = color_dict[value];  // set the fill color according to the class
+
     return style;
 }""")
 

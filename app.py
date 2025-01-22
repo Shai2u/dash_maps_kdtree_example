@@ -162,7 +162,7 @@ app.layout = html.Div(children=[
                                style=won_style_handle,
                                zoomToBoundsOnClick=True,
                                hideout=dict(
-                                   colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
+                                   color_dict=colors_dict, style=style, hoverStyle=hover_style, win_party="max_label")
                                ),
                     dl.Colorbar(id='colorbar', position='bottomright', opacity =0, tickText=['','']),
                     info
@@ -206,8 +206,7 @@ def update_barplot(clickData, fig):
 
 @ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option):
-    hideout = dict(colorscale=colorscale, classes=classes,
-                style=style, hoverStyle=hover_style, colorProp="max_label")
+    hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     if clickData is not None:
         feature_id = clickData["properties"]["YISHUV_STAT11"]
