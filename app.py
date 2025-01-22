@@ -189,23 +189,36 @@ def info_hover(feature):
     return get_info(feature)
 
 
-@ app.callback(Output('elections_barplot', 'figure'), Output('stats_layer', 'style'), Output('stats_layer', 'hideout'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
-def update_barplot(clickData, raio_map_analysis):
-    hideout = dict(colorscale=colorscale, classes=classes,
-                   style=style, hoverStyle=hover_style, colorProp="max_label")
+@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'))
+def update_barplot(clickData):
 
-    if raio_map_analysis == 'who_won':
-        return generate_random_barplot(clickData), won_style_handle,  hideout
-    if map_analysis_radio_options == 'kdtree':
+
+    # if raio_map_analysis == 'who_won':
+    return generate_random_barplot(clickData)
+
+"""   
+@ app.callback(Output('stats_layer', 'data'), Output('stats_layer', 'style'), Output('stats_layer', 'hideout'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
+def update_map_colors(map_json, clickData, radio_map_option):
+    hideout = dict(colorscale=colorscale, classes=classes,
+                style=style, hoverStyle=hover_style, colorProp="max_label")
+    
+    if map_json is not None:
+        stats_map_data_gdf = gpd.GeoDataFrame.from_features(map_json)
+    else:
+        stats_map_data_gdf = get_kdtree()
+
+    stats_data = stats_map_data_gdf.__geo_interface__
+    if radio_map_option == 'kdtree':
+        if clickData is not None:
+            feature_id = clickData["properties"]["YISHUV_STAT11"]
+            stats_map_data_gdf= get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
+            stats_data = stats_map_data_gdf.__geo_interface__
         print('kde Tree')
         hideout['colorscale'] = kde_colorscale
         hideout['classes'] = kde_classes
         hideout['colorProp'] = 'kde_distnace'
 
-        return {}, kde_style_handle, hideout
-    else:
-        return {}, won_style_handle, hideout
-
-
+    return stats_data , won_style_handle,  hideout
+""" 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
