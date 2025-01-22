@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
 from dash_extensions.javascript import arrow_function, assign
@@ -87,11 +87,13 @@ info = html.Div(children=get_info(), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
-def generate_random_barplot(feature=None):
-    feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
+def generate_barplot(feature=None):
     if feature is not None:
+        print(feature["properties"]["YISHUV_STAT11"])
         feature_id = feature["properties"]["YISHUV_STAT11"]
-
+    else:
+        feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
+        print('None')
     # Select statistical area and select only the relevant columns, sort by votes
     selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
                                   == feature_id].iloc[0]
@@ -189,60 +191,66 @@ def info_hover(feature):
     return get_info(feature)
 
 
-@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'))
-def update_barplot(clickData):
-
+@ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), State('elections_barplot', 'figure'))
+def update_barplot(clickData, fig):
 
     # if raio_map_analysis == 'who_won':
-    return generate_random_barplot(clickData)
+    if fig is None:
+        fig = generate_barplot()
+        return fig
+    if clickData is None:
+        return fig
+    else:
+        return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
-def update_map(map_json, clickData, radio_map_option):
+@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
+def update_map(map_layers, map_json, clickData, radio_map_option):
     hideout = dict(colorscale=colorscale, classes=classes,
                 style=style, hoverStyle=hover_style, colorProp="max_label")
-    
-    if map_json is not None:
-        stats_map_data_gdf = gpd.GeoDataFrame.from_features(map_json)
+    no_data = False
+    if clickData is not None:
+        feature_id = clickData["properties"]["YISHUV_STAT11"]
+        stats_map_data_gdf= get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
+        stats_data = stats_map_data_gdf.__geo_interface__
     else:
-        stats_map_data_gdf = get_kdtree()
-
-    stats_data = stats_map_data_gdf.__geo_interface__
-    map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
-                dl.GeoJSON(id='stats_layer', data=stats_data,
-                            hoverStyle=hover_style,
-                            style=won_style_handle,
-                            zoomToBoundsOnClick=True,
-                            hideout=hideout,
-                ),
-                info
-                ]
-    if radio_map_option == 'kdtree':
-        if clickData is not None:
-            feature_id = clickData["properties"]["YISHUV_STAT11"]
-            stats_map_data_gdf= get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
-            stats_data = stats_map_data_gdf.__geo_interface__
-        print('kde Tree')
-        hideout['colorscale'] = kde_colorscale
-        hideout['classes'] = kde_classes
-        hideout['colorProp'] = 'kde_distnace'
-        min_, max_ = stats_map_data_gdf['kde_distnace'].min(), stats_map_data_gdf['kde_distnace'].max()
-        classes_colormap = np.linspace(min_, max_, num=8)
-        ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
-        colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
-        map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                    dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
-                    dl.GeoJSON(id='stats_layer', data=stats_data,
-                               hoverStyle=hover_style,
-                               style=kde_style_handle,
-                               zoomToBoundsOnClick=True,
-                               hideout=hideout,
-                    ),
-                    colorbar,
-                    info
-                    ]
-        return map_layers
+        stats_data = map_json
+        no_data = True
+    
+    if no_data == False:
+        if radio_map_option =='who_won':
+            print('who won')
+            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                            dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                            dl.GeoJSON(id='stats_layer', data=stats_data,
+                                    hoverStyle=hover_style,
+                                    style=won_style_handle,
+                                    zoomToBoundsOnClick=True,
+                                    hideout=hideout,
+                            ),
+                            info
+                            ]
+        elif radio_map_option == 'kdtree':
+            print('kde Tree')
+            hideout['colorscale'] = kde_colorscale
+            hideout['classes'] = kde_classes
+            hideout['colorProp'] = 'kde_distnace'
+            min_, max_ = stats_map_data_gdf['kde_distnace'].min(), stats_map_data_gdf['kde_distnace'].max()
+            classes_colormap = np.linspace(min_, max_, num=8)
+            ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
+            colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
+            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                        dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                        dl.GeoJSON(id='stats_layer', data=stats_data,
+                                hoverStyle=hover_style,
+                                style=kde_style_handle,
+                                zoomToBoundsOnClick=True,
+                                hideout=hideout,
+                        ),
+                        colorbar,
+                        info
+                        ]
+            return map_layers
 
     return map_layers
 
