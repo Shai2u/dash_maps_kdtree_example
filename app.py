@@ -59,7 +59,6 @@ stats_data_gdf = gpd.GeoDataFrame()
 stats_data_gdf = get_kdtree()
 stats_data = stats_data_gdf.__geo_interface__
 
-
 def get_info(feature=None, col_rename=col_rename):
     """
     Generate information about a given feature.
@@ -163,6 +162,7 @@ app.layout = html.Div(children=[
                                hideout=dict(
                                    colorscale=colorscale, classes=classes, style=style, hoverStyle=hover_style, colorProp="max_label")
                                ),
+                    dl.Colorbar(id='colorbar', position='bottomright', opacity =0, tickText=['','']),
                     info
                 ],
                     center=[32, 34.9],
@@ -196,9 +196,9 @@ def update_barplot(clickData):
     # if raio_map_analysis == 'who_won':
     return generate_random_barplot(clickData)
 
-"""   
-@ app.callback(Output('stats_layer', 'data'), Output('stats_layer', 'style'), Output('stats_layer', 'hideout'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
-def update_map_colors(map_json, clickData, radio_map_option):
+
+@ app.callback(Output('env_map', 'children'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'))
+def update_map(map_json, clickData, radio_map_option):
     hideout = dict(colorscale=colorscale, classes=classes,
                 style=style, hoverStyle=hover_style, colorProp="max_label")
     
@@ -208,6 +208,16 @@ def update_map_colors(map_json, clickData, radio_map_option):
         stats_map_data_gdf = get_kdtree()
 
     stats_data = stats_map_data_gdf.__geo_interface__
+    map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                dl.GeoJSON(id='stats_layer', data=stats_data,
+                            hoverStyle=hover_style,
+                            style=won_style_handle,
+                            zoomToBoundsOnClick=True,
+                            hideout=hideout,
+                ),
+                info
+                ]
     if radio_map_option == 'kdtree':
         if clickData is not None:
             feature_id = clickData["properties"]["YISHUV_STAT11"]
@@ -217,8 +227,24 @@ def update_map_colors(map_json, clickData, radio_map_option):
         hideout['colorscale'] = kde_colorscale
         hideout['classes'] = kde_classes
         hideout['colorProp'] = 'kde_distnace'
+        min_, max_ = stats_map_data_gdf['kde_distnace'].min(), stats_map_data_gdf['kde_distnace'].max()
+        classes_colormap = np.linspace(min_, max_, num=8)
+        ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
+        colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
+        map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                    dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                    dl.GeoJSON(id='stats_layer', data=stats_data,
+                               hoverStyle=hover_style,
+                               style=kde_style_handle,
+                               zoomToBoundsOnClick=True,
+                               hideout=hideout,
+                    ),
+                    colorbar,
+                    info
+                    ]
+        return map_layers
 
-    return stats_data , won_style_handle,  hideout
-""" 
+    return map_layers
+
 if __name__ == '__main__':
     app.run_server(debug=True)
