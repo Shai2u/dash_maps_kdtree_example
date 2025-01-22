@@ -15,7 +15,7 @@ pd.options.display.max_columns = 150
 
 # Load the data
 heb_dict_df = pd.read_csv('data/heb_english_dict.csv', index_col=0)
-stats_data_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
+stats_data_original_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
 
 # Setting up dictionaries and classes for the map
 col_rename = heb_dict_df.T.set_index(0)[1].to_dict()
@@ -25,13 +25,13 @@ classes = list(colors_dict.keys())
 colorscale = list(colors_dict.values())
 
 # prepare and spatial data and covnert column names
-stats_data_gdf.rename(columns=col_rename, inplace=True)
-stats_data_gdf['sta_22_names'] = stats_data_gdf['sta_22_names'].str.replace(
+stats_data_original_gdf.rename(columns=col_rename, inplace=True)
+stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace(
     'No Name', '')
-stats_data_gdf.to_crs('EPSG:4326', inplace=True)
+stats_data_original_gdf.to_crs('EPSG:4326', inplace=True)
 
 
-def get_kdtree(stat_filter=stats_data_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_gdf.copy()):
+def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_original_gdf.copy()):
 
     kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == stat_filter].iloc[0]
     kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
@@ -55,7 +55,7 @@ def get_kdtree(stat_filter=stats_data_gdf.sample(1)['YISHUV_STAT11'].values[0], 
     gdf_kde['kde_distnace'] = distances
     return gdf_kde
 
-
+stats_data_gdf = gpd.GeoDataFrame()
 stats_data_gdf = get_kdtree()
 stats_data = stats_data_gdf.__geo_interface__
 
