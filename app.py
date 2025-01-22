@@ -89,11 +89,9 @@ info = html.Div(children=get_info(), id="info", className="info",
 
 def generate_barplot(feature=None):
     if feature is not None:
-        print(feature["properties"]["YISHUV_STAT11"])
         feature_id = feature["properties"]["YISHUV_STAT11"]
     else:
         feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
-        print('None')
     # Select statistical area and select only the relevant columns, sort by votes
     selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
                                   == feature_id].iloc[0]
@@ -250,7 +248,6 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     
     if no_data == False:
         if radio_map_option =='who_won':
-            print('who won')
             map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                             dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
                             dl.GeoJSON(id='stats_layer', data=stats_data,
@@ -262,7 +259,6 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                             info
                             ]
         elif radio_map_option == 'kdtree':
-            print('kde Tree')
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
             hideout['colorProp'] = 'kde_distnace'
@@ -299,7 +295,7 @@ def update_near_clster_bar(map_json, kdtree_distance):
     # Generate a barplot based on the KDE distances
     gdf_sorted = gdf.sort_values(by='kde_distnace').iloc[0:kdtree_distance]
     gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names'] 
-    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern')
+    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'])
     fig.update_layout(
         xaxis_tickangle=-90,
         yaxis=dict(visible=True),
@@ -314,5 +310,16 @@ def update_near_clster_bar(map_json, kdtree_distance):
     return fig
     # Generate a sample barplot
    
+@ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
+def zoom_to_feature_by_bar(clickData):
+    print('costum data')
+    print(clickData)
+    if clickData is not None:
+        stat = clickData['points'][0]['customdata'][0]
+        centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
+        return dict(center=[centroid.y, centroid.x], zoom=15, transition="flyTo")
+    else:
+        return {}
+
 if __name__ == '__main__':
     app.run_server(debug=True)
