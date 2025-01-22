@@ -141,13 +141,36 @@ app.layout = html.Div(children=[
         [
             html.Div([
                 html.H4("Map Analysis Options"),
-                dcc.RadioItems(
+                html.Div([
+                html.Div(dcc.RadioItems(
                     id='raio_map_analysis',
                     options=map_analysis_radio_options,
                     value='who_won',
                     labelStyle={'display': 'inline-block',
                                 'margin-right': '10px'}
-                ),
+                )),
+                html.Div(dcc.Slider(
+                    id='near_cluster',
+                    min=5,
+                    max=100,
+                    step=1,
+                    value=25,
+                    marks={i: str(i) for i in range(10, 101, 10)},
+                    tooltip={"placement": "bottom", "always_visible": True},
+
+                ),id='near_cluster_div', style={'width': '60%'}),
+                 html.Div(dcc.Slider(
+                    id='kmeans_cluster',
+                    min=2,
+                    max=10,
+                    step=1,
+                    value=4,
+                    marks={i: str(i) for i in range(2, 11, 1)},
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),id='kmeans_cluster_div', style={'width': '60%', 'display':'none'}),
+
+                ],style={
+                    'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
                 dcc.Graph(id='elections_barplot')], style={
                     'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
                 'minWidth': '200px', 'margin-right': '2%'}),
@@ -189,6 +212,15 @@ app.layout = html.Div(children=[
 @ app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
 def info_hover(feature):
     return get_info(feature)
+
+@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Input('raio_map_analysis', 'value'))
+def controller(radioButton):
+    if radioButton == 'who_won':
+        return [{'display':'none'},{'display':'none'}]
+    elif radioButton == 'kdtree':
+        return [{'width': '60%', 'display':'block'}, {'display':'none'}]
+    else:
+        return [{'display':'none'}, {'width': '60%', 'display':'block'}]
 
 
 @ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), State('elections_barplot', 'figure'))
