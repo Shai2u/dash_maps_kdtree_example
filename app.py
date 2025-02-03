@@ -319,8 +319,6 @@ def update_near_clster_bar(map_json, kdtree_distance):
    
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
 def zoom_to_feature_by_bar(clickData):
-    print('costum data')
-    print(clickData)
     if clickData is not None:
         stat = clickData['points'][0]['customdata'][0]
         centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
