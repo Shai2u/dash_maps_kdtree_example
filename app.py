@@ -87,6 +87,22 @@ info = html.Div(children=get_info(), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
+def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
+    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'], barmode='group')
+    fig.update_layout(
+        xaxis_tickangle=-90,
+        yaxis=dict(visible=True),
+        height=500,
+        showlegend=False,
+        template='plotly_white',
+        xaxis_showgrid=False,
+        yaxis_showgrid=False
+    )
+    fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
+    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0), font=dict(size=18))
+    return fig
+
+
 def generate_barplot(feature=None):
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
@@ -286,6 +302,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     return map_layers
 
 
+
 @ app.callback(Output('kde_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('near_cluster', 'value'))
 def update_near_clster_bar(map_json, kdtree_distance):
     # Convert GeoJSON data to GeoDataFrame
@@ -293,19 +310,10 @@ def update_near_clster_bar(map_json, kdtree_distance):
     gdf = gdf[gdf['kde_distnace']>0].reset_index(drop=True)
     # Generate a barplot based on the KDE distances
     gdf_sorted = gdf.sort_values(by='kde_distnace').iloc[0:kdtree_distance]
-    gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names'] 
-    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'])
-    fig.update_layout(
-        xaxis_tickangle=-90,
-        yaxis=dict(visible=True),
-        height=500,
-        showlegend=False,
-        template='plotly_white',
-        xaxis_showgrid=False,
-        yaxis_showgrid=False
-    )
-    fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0), font=dict(size=18))
+    # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
+    gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
+
+    fig = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
     return fig
     # Generate a sample barplot
    
