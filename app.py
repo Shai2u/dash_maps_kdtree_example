@@ -99,7 +99,7 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
         yaxis_showgrid=False
     )
     fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0), font=dict(size=18))
+    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0), font=dict(size=14))
     return fig
 
 
@@ -141,7 +141,7 @@ def generate_barplot(feature=None):
         yaxis_showgrid=False
     )
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.95, font=dict(size=18))
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.95, font=dict(size=14))
     return fig
 
 
