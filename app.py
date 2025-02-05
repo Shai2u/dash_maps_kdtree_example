@@ -9,6 +9,7 @@ from app_helper import won_style_handle, style, hover_style, map_analysis_radio_
 import numpy as np
 import plotly.express as px
 import json
+from sklearn.cluster import KMeans
 
 pd.options.display.max_columns = 150
 
@@ -54,6 +55,41 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
     gdf_kde = gdf.iloc[indices].copy()
     gdf_kde['kde_distnace'] = distances
     return gdf_kde
+
+def get_kmeans(kmeans_cluster, stats_map_data_gdf):
+    df = stats_map_data_gdf.copy()
+    kmeans_df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+            'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    # Initialize KMeans with 4 clusters
+    kmeans = KMeans(n_clusters=kmeans_cluster)
+
+    # # Fit the model
+    kmeans.fit(kmeans_df)
+
+    # Get the cluster labels
+    df['cluster'] = kmeans.labels_
+    attributes = kmeans.__dict__
+
+    # Print the attributes
+    for attr, value in attributes.items():
+        print(f"{attr}: {value}")
+    return df, kmeans
+
+def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
+    df = stats_map_data_gdf.copy()
+    df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+            'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    # 3. Normalize the data
+    df = df.apply(
+        lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
+
+    kmeans = KMeans(n_clusters=n_cluster, random_state=0)
+    # Fit the model
+    kmeans.fit(df)
+
+    # Get the cluster labels
+    df['cluster'] = kmeans.labels_
+    return df, kmeans
 
 stats_data_gdf = gpd.GeoDataFrame()
 stats_data_gdf = get_kdtree()
@@ -249,8 +285,8 @@ def update_barplot(clickData, fig):
         return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'))
-def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance):
+@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), Input('kmeans_cluster', 'value'))
+def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     if clickData is not None:
@@ -298,6 +334,14 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         info
                         ]
             return map_layers
+        
+        else:
+            print('kmeans')
+            gdf, kmeans = get_kmeans(kmeans_cluster, stats_map_data_gdf)
+            df, kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_map_data_gdf)
+            # Get the attributes of the KMeans instance
+
+
 
     return map_layers
 
