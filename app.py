@@ -277,7 +277,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
             hideout['colorProp'] = 'kde_distnace'
-            gdf = stats_map_data_gdf.copy()
+            gdf = get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
             gdf = gdf.sort_values(by='kde_distnace').reset_index(drop=True)
             gdf = gdf.iloc[0:kdtree_distance+1]
             min_, max_ = gdf['kde_distnace'].min(), gdf['kde_distnace'].max()
