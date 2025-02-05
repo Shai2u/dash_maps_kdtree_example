@@ -220,7 +220,9 @@ app.layout = html.Div(children=[
 
                 ],style={
                     'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
-                dcc.Graph(id='elections_barplot'), html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}) ], style={
+                dcc.Graph(id='elections_barplot'), 
+                html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}),
+                html.Div(dcc.Graph(id='kmeans_distance_barplot'),id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
                     'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
                 'minWidth': '200px', 'margin-right': '2%'}),
             html.Div([
@@ -262,15 +264,15 @@ app.layout = html.Div(children=[
 def info_hover(feature):
     return get_info(feature)
 
-@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Input('raio_map_analysis', 'value'))
+@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
 def controller(radioButton):
     if radioButton == 'who_won':
-        return [{'display':'none'},{'display':'none'}, {'display':'none'}]
+        return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
     elif radioButton == 'kdtree':
-        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}]
+        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
     else:
-        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}]
-
+        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
+        #Add This display kmeans_frequencybarplot_div
 
 @ app.callback(Output('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), State('elections_barplot', 'figure'))
 def update_barplot(clickData, fig):
