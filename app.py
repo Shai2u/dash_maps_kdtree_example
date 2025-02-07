@@ -54,27 +54,27 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
 
     # Retrieve nearest rows using the indices
     gdf_kde = gdf.iloc[indices].copy()
-    gdf_kde['kde_distnace'] = distances
+    gdf_kde['kde_distance'] = distances
     return gdf_kde
 
-def get_kmeans(kmeans_cluster, stats_map_data_gdf):
-    df = stats_map_data_gdf.copy()
-    kmeans_df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-            'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
-    # Initialize KMeans with 4 clusters
-    kmeans = KMeans(n_clusters=kmeans_cluster)
+# def get_kmeans(kmeans_cluster, stats_map_data_gdf):
+#     df = stats_map_data_gdf.copy()
+#     kmeans_df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+#             'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+#     # Initialize KMeans with 4 clusters
+#     kmeans = KMeans(n_clusters=kmeans_cluster)
 
-    # # Fit the model
-    kmeans.fit(kmeans_df.values)
+#     # # Fit the model
+#     kmeans.fit(kmeans_df.values)
 
-    # Get the cluster labels
-    df['cluster'] = kmeans.labels_
-    attributes = kmeans.__dict__
+#     # Get the cluster labels
+#     df['cluster'] = kmeans.labels_
+#     attributes = kmeans.__dict__
 
-    # Print the attributes
-    for attr, value in attributes.items():
-        print(f"{attr}: {value}")
-    return df, kmeans
+#     # Print the attributes
+#     for attr, value in attributes.items():
+#         print(f"{attr}: {value}")
+#     return df, kmeans
 
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     df = stats_map_data_gdf.copy()
@@ -85,8 +85,8 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     df = df.apply(
         lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
     df_kmeans = df.copy()
-    for col in ['kde_idstance', 'cluster', 'id']:
-        if col in df.columns:
+    for col in ['kde_distance', 'cluster', 'id']:
+        if col in df_kmeans.columns:
             df_kmeans.drop(col, inplace=True, axis=1)
     kmeans = KMeans(n_clusters=n_cluster, random_state=0)
     # Fit the model
@@ -129,7 +129,7 @@ info = html.Div(children=get_info(), id="info", className="info",
 
 
 def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
-    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distnace', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'], barmode='group')
+    fig = px.bar(gdf_sorted, x='name_stat', y='kde_distance', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'], barmode='group')
     fig.update_layout(
         xaxis_tickangle=-90,
         yaxis=dict(visible=True),
@@ -219,7 +219,7 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
 
 def get_kmeans_histogram_with_selected_line(df, filter_row, kmeans):
     filter_row = (filter_row/filter_row['bzb']).drop('bzb')
-    for col in ['kde_idstance', 'cluster', 'id']:
+    for col in ['kde_distance', 'cluster', 'id']:
         if col in filter_row.index:
             filter_row.drop(col, inplace=True)
     selected_cluster = kmeans.predict(filter_row.values.reshape(1, -1))[0]
@@ -231,6 +231,10 @@ def get_kmeans_histogram_with_selected_line(df, filter_row, kmeans):
         
 
     # Build the KDTree for the single cluster subset
+    for col in ['kde_distance', 'cluster', 'id']:
+        if col in df_subset.columns:
+            df_subset.drop(col, inplace=True, axis=1)
+
     tree = KDTree(df_subset.values)
 
     # Query KDTree for the 3 nearest neighbors (including the row itself)
@@ -377,11 +381,11 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
         elif radio_map_option == 'kdtree':
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
-            hideout['colorProp'] = 'kde_distnace'
+            hideout['colorProp'] = 'kde_distance'
             gdf = get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
-            gdf = gdf.sort_values(by='kde_distnace').reset_index(drop=True)
+            gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
             gdf = gdf.iloc[0:kdtree_distance+1]
-            min_, max_ = gdf['kde_distnace'].min(), gdf['kde_distnace'].max()
+            min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
             stats_data = gdf.__geo_interface__
             classes_colormap = np.linspace(min_, max_, num=8)
             ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
@@ -415,9 +419,9 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
 def update_near_clster_bar(map_json, kdtree_distance):
     # Convert GeoJSON data to GeoDataFrame
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-    gdf = gdf[gdf['kde_distnace']>0].reset_index(drop=True)
+    gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
     # Generate a barplot based on the KDE distances
-    gdf_sorted = gdf.sort_values(by='kde_distnace').iloc[0:kdtree_distance]
+    gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
     # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
     gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
 
