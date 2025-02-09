@@ -57,24 +57,6 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
     gdf_kde['kde_distance'] = distances
     return gdf_kde
 
-# def get_kmeans(kmeans_cluster, stats_map_data_gdf):
-#     df = stats_map_data_gdf.copy()
-#     kmeans_df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-#             'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
-#     # Initialize KMeans with 4 clusters
-#     kmeans = KMeans(n_clusters=kmeans_cluster)
-
-#     # # Fit the model
-#     kmeans.fit(kmeans_df.values)
-
-#     # Get the cluster labels
-#     df['cluster'] = kmeans.labels_
-#     attributes = kmeans.__dict__
-
-#     # Print the attributes
-#     for attr, value in attributes.items():
-#         print(f"{attr}: {value}")
-#     return df, kmeans
 
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     df = stats_map_data_gdf.copy()
