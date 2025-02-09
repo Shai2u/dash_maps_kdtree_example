@@ -206,7 +206,7 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
     fig.add_shape(
         type='line',
         x0=eu_distance, y0=0, x1=eu_distance, y1=max_y,
-        line=dict(color='red', dash='dash')
+        line=dict(color='red', dash='dash', width=2)
     )
 
     # Update layout for better visualization
