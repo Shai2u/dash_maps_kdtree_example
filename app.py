@@ -5,7 +5,7 @@ from dash_extensions.javascript import arrow_function, assign
 from scipy.spatial import KDTree, distance
 import geopandas as gpd
 import pandas as pd
-from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kde_colorscale, kde_style_handle
+from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kmeans_classes, kde_colorscale, kde_style_handle, kmeans_colorscale, kmeans_color_dict, kmeans_style_handle
 import numpy as np
 import plotly.express as px
 import json
@@ -59,7 +59,8 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
 
 
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
-    df = stats_map_data_gdf.copy()
+    gdf = stats_map_data_gdf.copy()
+    df = gdf.copy()
     df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
             'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
@@ -76,7 +77,8 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
 
     # Get the cluster labels
     df['cluster'] = kmeans.labels_
-    return df, kmeans
+    gdf['cluster'] = kmeans.labels_
+    return df, gdf,  kmeans
 
 stats_data_gdf = gpd.GeoDataFrame()
 stats_data_gdf = get_kdtree()
@@ -336,8 +338,8 @@ def update_barplot(clickData, fig):
         return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'))
-def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance):
+@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), Input('kmeans_cluster', 'value'))
+def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     if clickData is not None:
@@ -387,11 +389,25 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             return map_layers
         
         else:
-            print('kmeans')
-            # gdf, kmeans = get_kmeans(kmeans_cluster, stats_map_data_gdf)
+            hideout['color_dict'] = kmeans_color_dict
+            hideout['clusters_col'] = 'cluster'
+
+            _, gdf,  _ =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
+
             # Get the attributes of the KMeans instance
 
-
+            stats_data = gdf.__geo_interface__
+            
+            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                        dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                        dl.GeoJSON(id='stats_layer', data=stats_data,
+                                hoverStyle=hover_style,
+                                style=kmeans_style_handle,
+                                zoomToBoundsOnClick=True,
+                                hideout=hideout,
+                        ),
+                        info
+                        ]
 
     return map_layers
 
@@ -420,7 +436,7 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
         feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
     print('kmeans before figure')
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-    df, kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
+    df, _,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
     df_copy = stats_data_gdf.copy()
     kdf_filter_row = df_copy[df_copy['YISHUV_STAT11'] == feature_id].iloc[0]
     kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
@@ -428,7 +444,6 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
     
 
     fig = get_kmeans_histogram_with_selected_line(df , kdf_filter_row, kmeans)
-    print(str(fig))
     print('kmeans fig')
     return fig
     

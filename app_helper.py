@@ -5,12 +5,7 @@ from dash import Dash, dcc, html, Input, Output
 
 won_style_handle = assign("""function(feature, context){
     const {color_dict, style, win_party} = context.hideout;  // get props from hideout
-    console.log(win_party)
-    console.log('in')
-
-    console.log(color_dict)
     const value = feature.properties[win_party];  // get value the determines the color
-    console.log(value)
     style.fillColor = color_dict[value];  // set the fill color according to the class
 
     return style;
@@ -28,14 +23,32 @@ kde_style_handle = assign("""function(feature, context){
     return style;
 }""")
 
+kmeans_style_handle = assign("""function(feature, context){
+    const {color_dict, style, clusters_col} = context.hideout;  // get props from hideout
+    const value = feature.properties[clusters_col];  // get value the determines the color
+    style.fillColor = color_dict[value];  // set the fill color according to the class
+
+    return style;
+}""")
 
 style = {'color': 'white',  'fillOpacity': 0.9, 'weight': 1.5}
 
 hover_style = {'color': 'white',  'fillOpacity': 0.5, 'weight': 3}
 
 kde_classes = [0, 0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 0.84]
+kmeans_classes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 kde_colorscale = ['#112A32', '#118443', '#41AB5D', '#78C679', '#ADDD8E', '#D9F0A3', '#F7FCB9', '#FFFFE5',]
-
+kmeans_colorscale = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF', '#33FFA1', '#FF8C33', '#33FFF5', '#F533FF', '#33FF8C']
+kmeans_color_dict = {0: '#FF5733',
+                    1: '#33FF57',
+                    2: '#3357FF',
+                    3: '#FF33A1',
+                    4: '#A133FF',
+                    5: '#33FFA1',
+                    6: '#FF8C33',
+                    7: '#33FFF5',
+                    8: '#F533FF',
+                    9: '#33FF8C'}
 map_analysis_radio_options = [
     {'label': 'Who Won', 'value': 'who_won'},
     {'label': 'Kdtree', 'value': 'kdtree'},
