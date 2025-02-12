@@ -228,8 +228,7 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     df_kmeans = df_subset.iloc[indices].copy()
     df_kmeans['distance_to_clsuter'] = distances
     eu_distance = distance.euclidean(selected_cluster_attributes, filter_row.values)
-    fig = generate_histogram_with_line(df_kmeans, eu_distance)
-    return fig
+    return df_kmeans, eu_distance
 
 
 app = Dash(title="Similar to me")
@@ -436,13 +435,41 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
         feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
     print('kmeans before figure')
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-    df, _,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
+    df, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
+    gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
+    centro_filter_row = gdf_centroids[gdf_centroids['YISHUV_STAT11'] == feature_id].iloc[0][['geometry', 'cluster']]
+    gdf_filter_cluster = gdf_centroids[gdf_centroids['cluster']==centro_filter_row['cluster']].copy()[['geometry', 'cluster']]
+    # bookmark kde tree
+    centro_filter_row['x'] = centro_filter_row['geometry'].x
+    centro_filter_row['y'] = centro_filter_row['geometry'].y
+    centro_filter_row = centro_filter_row.drop(['cluster', 'geometry'])
+
+    gdf_filter_cluster['x'] = gdf_filter_cluster['geometry'].x
+    gdf_filter_cluster['y'] = gdf_filter_cluster['geometry'].y
+    gdf_filter_cluster.drop(columns = ['cluster', 'geometry'], inplace=True)
+
+    # this is wrong! I should take the closest value to cluster and that should messure the distnace to all the other points, and than take the selectd zone and check it's location
+    # FIX THIS!
+    tree = KDTree(gdf_filter_cluster.values)
+
+    # Query KDTree for the 3 nearest neighbors (including the row itself)
+    distances, indices = tree.query(centro_filter_row.values, k=len(gdf_filter_cluster))
+    gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
+    gdf_filter_cluster['geo_distance'] = distances
     df_copy = stats_data_gdf.copy()
+
+    
     kdf_filter_row = df_copy[df_copy['YISHUV_STAT11'] == feature_id].iloc[0]
     kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
                 'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
     
     df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans)
+    fig = generate_histogram_with_line(df_kmeans, eu_distance)
+    
+    gdf_filter_cluster = gdf_filter_cluster.sort_index()
+    df_kmeans = df_kmeans.sort_index()
+
+    # New scatterplot figure comes here
     print('kmeans fig')
     return fig
     
