@@ -201,7 +201,7 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
 
     return fig
 
-def get_kmeans_histogram_with_selected_line(df, filter_row, kmeans):
+def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     filter_row = (filter_row/filter_row['bzb']).drop('bzb')
     for col in ['kde_distance', 'cluster', 'id']:
         if col in filter_row.index:
@@ -442,8 +442,7 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
     kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
                 'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
     
-
-    fig = get_kmeans_histogram_with_selected_line(df , kdf_filter_row, kmeans)
+    df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans)
     print('kmeans fig')
     return fig
     
