@@ -446,8 +446,8 @@ def update_near_clster_bar(map_json, kdtree_distance):
     return fig
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('kmeans_cluster', 'value'), State('temp-data-store', 'data'))
-def update_kmeans_distance_bar(map_json, feature, kmeans_cluster, saved_model):
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'))
+def update_kmeans_distance_bar(map_json, feature, saved_model):
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     else:
@@ -468,7 +468,7 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster, saved_model):
             'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
     # df, gdf,  kmeans_model =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
-    df_copy = stats_data_gdf.copy()
+    df_copy = gdf.copy()
     feature_index_id = df_copy[df_copy['YISHUV_STAT11'] == feature_id].index[0]
     kdf_filter_row = df_copy.loc[feature_index_id]
     kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
@@ -579,7 +579,8 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster, saved_model):
         yshift=20,
         font=dict(size=12)
     )
-
+    scatter_fig.update_xaxes(range=[0, x.max()])
+    scatter_fig.update_yaxes(range=[0, y.max()])
     return scatter_fig
     # return fig
     
