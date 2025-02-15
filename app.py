@@ -8,8 +8,12 @@ import pandas as pd
 from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kmeans_classes, kde_colorscale, kde_style_handle, kmeans_colorscale, kmeans_color_dict, kmeans_style_handle
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import json
 from sklearn.cluster import KMeans
+import copy
+import joblib
+from io import BytesIO
 
 
 pd.options.display.max_columns = 150
@@ -68,7 +72,8 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     df = df.apply(
         lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
     df_kmeans = df.copy()
-    for col in ['kde_distance', 'cluster', 'id']:
+
+    for col in ['votes', 'invalid_votes', 'valid_votes','kde_distance', 'cluster', 'id']:
         if col in df_kmeans.columns:
             df_kmeans.drop(col, inplace=True, axis=1)
     kmeans = KMeans(n_clusters=n_cluster, random_state=0)
@@ -173,11 +178,11 @@ def generate_barplot(feature=None):
 def generate_histogram_with_line(df_kmeans, eu_distance):
 
     # Plot histogram of df_kmeans distances using Plotly
-    # fig = px.histogram(df_kmeans, x='distance_to_clsuter', nbins=30, title='Histogram of Distances to Cluster Center')
+    # fig = px.histogram(df_kmeans, x='distance_to_cluster', nbins=30, title='Histogram of Distances to Cluster Center')
 
     # x = fig.data[0].x
     # Create 30 bins
-    hist, bin_edges = np.histogram(df_kmeans['distance_to_clsuter'], bins=30)
+    hist, bin_edges = np.histogram(df_kmeans['distance_to_cluster'], bins=30)
 
     # Get the most frequent bin
     max_y = np.max(hist)
@@ -203,7 +208,7 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
 
 def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     filter_row = (filter_row/filter_row['bzb']).drop('bzb')
-    for col in ['kde_distance', 'cluster', 'id']:
+    for col in ['votes', 'invalid_votes', 'valid_votes','kde_distance', 'cluster', 'id']:
         if col in filter_row.index:
             filter_row.drop(col, inplace=True)
     selected_cluster = kmeans.predict(filter_row.values.reshape(1, -1))[0]
@@ -211,11 +216,13 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     if 'cluster' in df_subset.columns:
         df_subset.drop(columns='cluster', inplace=True)
     # Get the attributes of the selected center cluster
+    print('Selected Cluster', selected_cluster)
     selected_cluster_attributes = kmeans.__dict__['cluster_centers_'][selected_cluster]
         
+    df_subset = df_subset.apply(lambda p: p/p['bzb'], axis=1)
 
     # Build the KDTree for the single cluster subset
-    for col in ['kde_distance', 'cluster', 'id']:
+    for col in ['bzb', 'votes', 'invalid_votes', 'valid_votes', 'kde_distance', 'cluster', 'id']:
         if col in df_subset.columns:
             df_subset.drop(col, inplace=True, axis=1)
 
@@ -226,7 +233,7 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
 
     # Retrieve nearest rows using the indices
     df_kmeans = df_subset.iloc[indices].copy()
-    df_kmeans['distance_to_clsuter'] = distances
+    df_kmeans['distance_to_cluster'] = distances
     eu_distance = distance.euclidean(selected_cluster_attributes, filter_row.values)
     return df_kmeans, eu_distance
 
@@ -306,6 +313,7 @@ app.layout = html.Div(children=[
             )
         ],
     ),
+    dcc.Store(id='temp-data-store'),
 
 ])
 
@@ -337,10 +345,12 @@ def update_barplot(clickData, fig):
         return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), Input('kmeans_cluster', 'value'))
+@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
+State('kmeans_cluster', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
+    data_store_temp = {}
     if clickData is not None:
         feature_id = clickData["properties"]["YISHUV_STAT11"]
         stats_map_data_gdf= get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
@@ -385,13 +395,13 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         colorbar,
                         info
                         ]
-            return map_layers
+            return map_layers, data_store_temp
         
         else:
             hideout['color_dict'] = kmeans_color_dict
             hideout['clusters_col'] = 'cluster'
 
-            _, gdf,  _ =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
+            _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
 
             # Get the attributes of the KMeans instance
 
@@ -408,7 +418,16 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         info
                         ]
 
-    return map_layers
+            
+            # Store the kmeans model in dcc.Store for later use
+            # Serialize the model to a byte stream
+            joblib.dump(kmeans, 'kmeans_model.joblib')
+
+
+            # Store the byte stream in a variable
+            data_store_temp = {'model_stored':'kmeans_model.joblib'}
+
+    return map_layers, data_store_temp
 
 
 
@@ -427,18 +446,40 @@ def update_near_clster_bar(map_json, kdtree_distance):
     return fig
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('kmeans_cluster', 'value'))
-def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('kmeans_cluster', 'value'), State('temp-data-store', 'data'))
+def update_kmeans_distance_bar(map_json, feature, kmeans_cluster, saved_model):
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     else:
         feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
-    print('kmeans before figure')
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-    df, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
+    if 'cluster' not in gdf.columns:
+        return {}
+    if 0 not in gdf['cluster'].unique():
+        return {}
+    
+    if saved_model == {} or saved_model is None:
+        return {}
+    else:
+        kmeans_model = joblib.load(saved_model['model_stored'])
+
+        df = gdf.copy()
+        df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+            'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    
+    # df, gdf,  kmeans_model =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
+    df_copy = stats_data_gdf.copy()
+    feature_index_id = df_copy[df_copy['YISHUV_STAT11'] == feature_id].index[0]
+    kdf_filter_row = df_copy.loc[feature_index_id]
+    kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+                'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
+    
+    df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
+    fig = generate_histogram_with_line(df_kmeans, eu_distance)
+    
     gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
     centro_filter_row = gdf_centroids[gdf_centroids['YISHUV_STAT11'] == feature_id].iloc[0][['geometry', 'cluster']]
-    gdf_filter_cluster = gdf_centroids[gdf_centroids['cluster']==centro_filter_row['cluster']].copy()[['geometry', 'cluster']]
+    gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster']]
     # bookmark kde tree
     centro_filter_row['x'] = centro_filter_row['geometry'].x
     centro_filter_row['y'] = centro_filter_row['geometry'].y
@@ -456,22 +497,91 @@ def update_kmeans_distance_bar(map_json, feature, kmeans_cluster):
     distances, indices = tree.query(centro_filter_row.values, k=len(gdf_filter_cluster))
     gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
     gdf_filter_cluster['geo_distance'] = distances
-    df_copy = stats_data_gdf.copy()
-
-    
-    kdf_filter_row = df_copy[df_copy['YISHUV_STAT11'] == feature_id].iloc[0]
-    kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-                'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
-    
-    df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans)
-    fig = generate_histogram_with_line(df_kmeans, eu_distance)
     
     gdf_filter_cluster = gdf_filter_cluster.sort_index()
     df_kmeans = df_kmeans.sort_index()
 
+    # concat the geo distance (mulitipied by 111 to convert to km) and the distance to cluster
+    kmeans_geo_distance = pd.concat([gdf_filter_cluster[['geo_distance']]*111, df_kmeans[['distance_to_cluster']]], axis=1)
+    selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
+    # feature_index_id
     # New scatterplot figure comes here
     print('kmeans fig')
-    return fig
+    scatter_fig = px.scatter(
+        kmeans_geo_distance, 
+        x='distance_to_cluster', 
+        y='geo_distance',
+        labels={
+            'distance_to_cluster': 'Distance to Cluster Center (no units)',
+            'geo_distance': 'Geo Distance (in KM)'
+        },
+        title='Distance Relationships'
+    )
+
+    # Add crosshair lines for the selected feature
+    scatter_fig.add_shape(
+        type='line',
+        x0=selected_feature_distances_dict['distance_to_cluster'],
+        y0=0,
+        x1=selected_feature_distances_dict['distance_to_cluster'], 
+        y1=kmeans_geo_distance['geo_distance'].max(),
+        line=dict(color='red', width=1, dash='solid'),
+        name='Selected Area'
+    )
+    scatter_fig.add_shape(
+        type='line',
+        x0=0,
+        y0=selected_feature_distances_dict['geo_distance'],
+        x1=kmeans_geo_distance['distance_to_cluster'].max(),
+        y1=selected_feature_distances_dict['geo_distance'],
+        line=dict(color='red', width=1, dash='solid'),
+        name='Selected Area'
+    )
+
+    scatter_fig.update_layout(
+        template='plotly_white',
+        height=500,
+        showlegend=True
+    )
+    # Calculate polynomial regression
+    x = kmeans_geo_distance['distance_to_cluster']
+    y = kmeans_geo_distance['geo_distance']
+    
+    # Fit polynomial of degree 2
+    coeffs = np.polyfit(x, y, 2)
+    polynomial = np.poly1d(coeffs)
+    
+    # Calculate R-squared
+    y_pred = polynomial(x)
+    r2 = 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - y.mean()) ** 2))
+    
+    # Generate points for smooth curve
+    x_smooth = np.linspace(x.min(), x.max(), 200)
+    y_smooth = polynomial(x_smooth)
+    
+    # Add regression line and R² annotation
+    scatter_fig.add_trace(
+        go.Scatter(
+            x=x_smooth,
+            y=y_smooth,
+            mode='lines',
+            showlegend=False,
+            line=dict(color='green', width=2)
+        )
+    )
+    
+    # Add R² annotation above the regression line
+    scatter_fig.add_annotation(
+        x=x_smooth.mean(),
+        y=y_smooth.mean(),
+        text=f'R² = {r2:.3f}',
+        showarrow=False,
+        yshift=20,
+        font=dict(size=12)
+    )
+
+    return scatter_fig
+    # return fig
     
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
 
