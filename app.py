@@ -460,7 +460,7 @@ def update_near_clster_bar(map_json, kdtree_distance):
     return fig
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'))
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), prevent_initial_call=True)
 def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     # Prevent callback execution on initial load
     if map_json is None or feature is None:
@@ -526,7 +526,6 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
     # feature_index_id
     # New scatterplot figure comes here
-    print('kmeans fig')
     scatter_fig = px.scatter(
         kmeans_geo_distance, 
         x='distance_to_cluster', 
@@ -605,7 +604,6 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     # return fig
     
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
-
 def zoom_to_feature_by_bar(clickData):
     if clickData is not None:
         stat = clickData['points'][0]['customdata'][0]
