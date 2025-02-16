@@ -11,9 +11,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import json
 from sklearn.cluster import KMeans
-import copy
 import joblib
-from io import BytesIO
+import os
 
 
 pd.options.display.max_columns = 150
@@ -61,7 +60,7 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
     gdf_kde['kde_distance'] = distances
     return gdf_kde
 
-
+# RUN KMENAS ONLY When The number of cluster is changed!!!!!!
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     gdf = stats_map_data_gdf.copy()
     df = gdf.copy()
@@ -76,7 +75,7 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     for col in ['votes', 'invalid_votes', 'valid_votes','kde_distance', 'cluster', 'id']:
         if col in df_kmeans.columns:
             df_kmeans.drop(col, inplace=True, axis=1)
-    kmeans = KMeans(n_clusters=n_cluster, random_state=0)
+    kmeans = KMeans(n_clusters=n_cluster, random_state=42)
     # Fit the model
     kmeans.fit(df_kmeans.values)
 
@@ -134,10 +133,11 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
 
 
 def generate_barplot(feature=None):
+    print('feature: ', feature)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     else:
-        feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
+        return {}
     # Select statistical area and select only the relevant columns, sort by votes
     selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
                                   == feature_id].iloc[0]
@@ -346,7 +346,7 @@ def update_barplot(clickData, fig):
 
 
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
-State('kmeans_cluster', 'value'))
+Input('kmeans_cluster', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
@@ -400,8 +400,22 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
         else:
             hideout['color_dict'] = kmeans_color_dict
             hideout['clusters_col'] = 'cluster'
+            # Check if kmeans_cluster value has changed from previous run
+            flag_run_kmeans = False
+            if data_store_temp.get('model_stored') and os.path.exists(data_store_temp.get('model_stored')):
+                previous_model = joblib.load(data_store_temp.get('model_stored'))
+                if previous_model.n_clusters != kmeans_cluster:
+                    # If the number of clusters has changed, flag run the kmeans again
+                    flag_run_kmeans = True
+                else:
+                    gdf = stats_data_gdf.copy()
+                    kmeans = previous_model
+            else:
+                flag_run_kmeans = True
+            # Run kmeans if the number of clusters has changed
+            if flag_run_kmeans:
+                _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
 
-            _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
 
             # Get the attributes of the KMeans instance
 
@@ -446,12 +460,18 @@ def update_near_clster_bar(map_json, kdtree_distance):
     return fig
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'))
-def update_kmeans_distance_bar(map_json, feature, saved_model):
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'))
+def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
+    # Prevent callback execution on initial load
+    if map_json is None or feature is None:
+        if fig is None:
+            return {}
+        else:
+            return fig
+    
+    feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
-    else:
-        feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
     if 'cluster' not in gdf.columns:
         return {}
@@ -478,7 +498,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model):
     fig = generate_histogram_with_line(df_kmeans, eu_distance)
     
     gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
-    centro_filter_row = gdf_centroids[gdf_centroids['YISHUV_STAT11'] == feature_id].iloc[0][['geometry', 'cluster']]
+    centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster']]
     gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster']]
     # bookmark kde tree
     centro_filter_row['x'] = centro_filter_row['geometry'].x
