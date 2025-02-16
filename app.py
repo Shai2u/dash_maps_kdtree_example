@@ -121,14 +121,16 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
     fig.update_layout(
         xaxis_tickangle=-90,
         yaxis=dict(visible=True),
-        height=500,
+        height=550,
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
-        yaxis_showgrid=False
-    )
+        yaxis_showgrid=False,
+        margin=dict(l=0, r=0, t=15, b=0), 
+        font=dict(size=14),
+        title_y=0.98, 
+        )
     fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=30, b=0), font=dict(size=14))
     return fig
 
 
@@ -164,14 +166,14 @@ def generate_barplot(feature=None):
         xaxis_tickangle=-90,
         yaxis=dict(range=[0, top_ten.max()+0.1 if top_ten.max()
                    > 0.5 else 0.5], visible=False),
-        height=500,
+        height=300,
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
         yaxis_showgrid=False
     )
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.95, font=dict(size=14))
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
     return fig
 
 
@@ -189,7 +191,6 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
     # Create a bar plot using hist and bin_edges
     fig = px.bar(x=bin_edges[:-1], y=hist, labels={'x': 'Distance to Cluster Center', 'y': 'Frequency'}, title='Histogram of Distances to Cluster Center')
     fig.update_traces(marker_color='blue', marker = {'line':{'width':0}})
-    fig.update_layout(bargap=0.1)
 
     # Add a red vertical line at 0.3
     fig.add_shape(
@@ -201,8 +202,17 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
     # Update layout for better visualization
     fig.update_layout(
         xaxis_title='Distance to Cluster Center',
-        yaxis_title='Frequency'
+        yaxis_title='Frequency',
+        template='plotly_white',
+        margin=dict(l=0, r=0, t=0, b=0), 
+        title_y=0.9, 
+        title_x=0.6, 
+        font=dict(size=14),
+        bargap=0.1,
+        height=300,
+
     )
+    
 
     return fig
 
@@ -279,7 +289,7 @@ app.layout = html.Div(children=[
                     'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
                 dcc.Graph(id='elections_barplot'), 
                 html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}),
-                html.Div(dcc.Graph(id='kmeans_distance_barplot'),id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
+                html.Div([dcc.Graph(id='kmeans_distance_barplot'), dcc.Graph(id='kmeans_scatterplot')],id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
                     'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
                 'minWidth': '200px', 'margin-right': '2%'}),
             html.Div([
@@ -300,7 +310,7 @@ app.layout = html.Div(children=[
                 ],
                     center=[32, 34.9],
                     zoom=12,
-                    style={'height': '75vh'},
+                    style={'height': '99vh'},
                     id='env_map',
                     dragging=True,
                     zoomControl=True,
@@ -309,7 +319,7 @@ app.layout = html.Div(children=[
                     boxZoom=True,
                 )
 
-            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'minWidth': '600px', 'margin-left': '2%'}
+            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'margin-left': '2%'}
             )
         ],
     ),
@@ -455,31 +465,31 @@ def update_near_clster_bar(map_json, kdtree_distance):
     # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
     gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
 
-    fig = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
+    fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
     
-    return fig
+    return fig_kde
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), prevent_initial_call=True)
-def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), State('kmeans_scatterplot', 'figure'), prevent_initial_call=True)
+def update_kmeans_distance_bar(map_json, feature, saved_model, fig_bar, fig_scatter):
     # Prevent callback execution on initial load
     if map_json is None or feature is None:
-        if fig is None:
-            return {}
+        if None in [fig_bar, fig_scatter]:
+            return {}, {}
         else:
-            return fig
+            return fig_bar, fig_scatter
     
     feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
     if 'cluster' not in gdf.columns:
-        return {}
+        return {}, {}
     if 0 not in gdf['cluster'].unique():
-        return {}
+        return {}, {}
     
     if saved_model == {} or saved_model is None:
-        return {}
+        return {}, {}
     else:
         kmeans_model = joblib.load(saved_model['model_stored'])
 
@@ -495,7 +505,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
                 'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
     
     df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
-    fig = generate_histogram_with_line(df_kmeans, eu_distance)
+    fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
     
     gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
     centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster']]
@@ -526,7 +536,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
     # feature_index_id
     # New scatterplot figure comes here
-    scatter_fig = px.scatter(
+    fig_scatter = px.scatter(
         kmeans_geo_distance, 
         x='distance_to_cluster', 
         y='geo_distance',
@@ -538,7 +548,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     )
 
     # Add crosshair lines for the selected feature
-    scatter_fig.add_shape(
+    fig_scatter.add_shape(
         type='line',
         x0=selected_feature_distances_dict['distance_to_cluster'],
         y0=0,
@@ -547,7 +557,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
         line=dict(color='red', width=1, dash='solid'),
         name='Selected Area'
     )
-    scatter_fig.add_shape(
+    fig_scatter.add_shape(
         type='line',
         x0=0,
         y0=selected_feature_distances_dict['geo_distance'],
@@ -557,9 +567,9 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
         name='Selected Area'
     )
 
-    scatter_fig.update_layout(
+    fig_scatter.update_layout(
         template='plotly_white',
-        height=500,
+        height=300,
         showlegend=True
     )
     # Calculate polynomial regression
@@ -579,7 +589,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     y_smooth = polynomial(x_smooth)
     
     # Add regression line and R² annotation
-    scatter_fig.add_trace(
+    fig_scatter.add_trace(
         go.Scatter(
             x=x_smooth,
             y=y_smooth,
@@ -590,7 +600,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
     )
     
     # Add R² annotation above the regression line
-    scatter_fig.add_annotation(
+    fig_scatter.add_annotation(
         x=x_smooth.mean(),
         y=y_smooth.mean(),
         text=f'R² = {r2:.3f}',
@@ -598,10 +608,12 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig):
         yshift=20,
         font=dict(size=12)
     )
-    scatter_fig.update_xaxes(range=[0, x.max()])
-    scatter_fig.update_yaxes(range=[0, y.max()])
-    return scatter_fig
-    # return fig
+    fig_scatter.update_xaxes(range=[0, x.max()])
+    fig_scatter.update_yaxes(range=[0, y.max()])
+    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
+
+    #### !!!! RETURTN DCCC.GRAP
+    return fig_bar, fig_scatter
     
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
 def zoom_to_feature_by_bar(clickData):
