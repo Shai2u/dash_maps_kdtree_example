@@ -1,15 +1,14 @@
 from dash import Dash, dcc, html, Input, Output, State
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
-from dash_extensions.javascript import arrow_function, assign
+# from dash_extensions.javascript import arrow_function, assign
 from scipy.spatial import KDTree, distance
 import geopandas as gpd
 import pandas as pd
-from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kmeans_classes, kde_colorscale, kde_style_handle, kmeans_colorscale, kmeans_color_dict, kmeans_style_handle
+from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kde_colorscale, kde_style_handle, kmeans_color_dict, kmeans_style_handle
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import json
 from sklearn.cluster import KMeans
 import joblib
 import os
