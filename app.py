@@ -1,3 +1,19 @@
+"""
+Author: Shai Sussman
+Date: 2025-02-17
+Description: This application provides an interactive visualization of Israeli election data using Dash.
+It includes features for analyzing voting patterns through KDTree clustering, KMeans clustering,
+and geographic distance relationships. The app displays results on an interactive map with 
+accompanying statistical plots and allows users to explore spatial relationships between different
+voting districts.
+
+Key Features:
+- Interactive map visualization of election results
+- KDTree and KMeans clustering analysis
+- Distance-based relationship plots
+- Geographic data exploration tools
+"""
+
 from dash import Dash, dcc, html, Input, Output, State
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
