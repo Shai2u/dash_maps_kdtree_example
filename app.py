@@ -113,7 +113,6 @@ def setup_col_rename_color_dicts(heb_dict_df: pd.DataFrame) -> tuple[dict, dict,
     color_dict_party_name = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()   
     return col_rename, color_dict_party_index, color_dict_party_name
 
-
 def get_kdtree(gdf: gpd.GeoDataFrame, stat_filter: str) -> gpd.GeoDataFrame:
 
     kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == stat_filter].iloc[0]
@@ -137,7 +136,6 @@ def get_kdtree(gdf: gpd.GeoDataFrame, stat_filter: str) -> gpd.GeoDataFrame:
     gdf_kde = gdf.iloc[indices].copy()
     gdf_kde['kde_distance'] = distances
     return gdf_kde
-
 
 # RUN KMENAS ONLY When The number of cluster is changed!!!!!!
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
@@ -163,8 +161,6 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     gdf['cluster'] = kmeans.labels_
     return df, gdf,  kmeans
 
-
-
 def get_info(feature, col_rename):
     """
     Generate information about a given feature.
@@ -188,7 +184,6 @@ def get_info(feature, col_rename):
     return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
-
 def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
     fig = px.bar(gdf_sorted, x='name_stat', y='kde_distance', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'], barmode='group')
     fig.update_layout(
@@ -205,7 +200,6 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
         )
     fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
     return fig
-
 
 def generate_barplot(feature=None):
     print('feature: ', feature)
@@ -248,7 +242,6 @@ def generate_barplot(feature=None):
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
     fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
     return fig
-
 
 def generate_histogram_with_line(df_kmeans, eu_distance):
 
