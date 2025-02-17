@@ -28,29 +28,93 @@ import joblib
 import os
 from app_helper import won_style_handle, style, hover_style, map_analysis_radio_options, kde_classes, kde_colorscale, kde_style_handle, kmeans_color_dict, kmeans_style_handle
 
-
 pd.options.display.max_columns = 150
 
+def load_data(path: str, **kwargs) -> pd.DataFrame:
+    """Load data from CSV or GeoJSON file.
 
-# Load the data
-heb_dict_df = pd.read_csv('data/heb_english_dict.csv', index_col=0)
-stats_data_original_gdf = gpd.read_file('data/stat_pop_simpl_votes_2022.geojson')
+    Parameters
+    ----------
+    path : str
+        Path to the data file. Must be either .csv or .geojson
+    **kwargs : dict
+        Additional keyword arguments. For GeoJSON files, can include 'crs' 
+        to specify coordinate reference system.
 
-# Setting up dictionaries and classes for the map
-col_rename = heb_dict_df.T.set_index(0)[1].to_dict()
-colors_dict = heb_dict_df.T.set_index(0).loc['party_1':][2].to_dict()
-colors_dict2 = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()
-classes = list(colors_dict.keys())
-colorscale = list(colors_dict.values())
+    Returns
+    -------
+    pd.DataFrame or gpd.GeoDataFrame
+        DataFrame containing the loaded data. Returns GeoDataFrame if input is GeoJSON.
 
-# prepare and spatial data and covnert column names
-stats_data_original_gdf.rename(columns=col_rename, inplace=True)
-stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace(
-    'No Name', '')
-stats_data_original_gdf.to_crs('EPSG:4326', inplace=True)
+    Raises
+    ------
+    ValueError
+        If file type is not supported (.csv or .geojson)
+    """
+    if path.endswith('.csv'):
+        if 'index_col' in kwargs:
+            return pd.read_csv(path, index_col=kwargs['index_col'])
+        else:   
+            return pd.read_csv(path)
+    elif path.endswith('.geojson'):
+        if 'crs' in kwargs:
+            return gpd.read_file(path).to_crs(kwargs['crs'])
+        else:   
+            return gpd.read_file(path)
+    else:
+        raise ValueError(f"Unsupported file type: {path}")
+
+def load_data_main() -> tuple[pd.DataFrame, gpd.GeoDataFrame]:
+    """Load Hebrew-English dictionary and statistical population data.
+
+    Loads two data files:
+    1. Hebrew-English dictionary mapping Hebrew column names to English
+    2. Statistical population data with voting information from 2022
+
+    Returns
+    -------
+    tuple[pd.DataFrame, gpd.GeoDataFrame]
+        heb_dict_df : pd.DataFrame
+            DataFrame containing Hebrew to English column name mappings
+        stats_data_original_gdf : gpd.GeoDataFrame 
+            GeoDataFrame containing statistical population and voting data
+            with geometry in EPSG:4326 projection
+    """
+    heb_dict_df = load_data('data/heb_english_dict.csv', index_col=0)
+    stats_data_original_gdf = load_data('data/stat_pop_simpl_votes_2022.geojson', crs='EPSG:4326')
+    return heb_dict_df, stats_data_original_gdf
+
+def setup_col_rename_color_dicts(heb_dict_df: pd.DataFrame) -> tuple[dict, dict, dict]:
+    """Set up dictionaries for column renaming and party colors.
+
+    Creates three dictionaries from the Hebrew-English dictionary DataFrame:
+    1. Column name mapping from Hebrew to English
+    2. Color mapping for parties by index
+    3. Color mapping for parties by name
+
+    Parameters
+    ----------
+    heb_dict_df : pd.DataFrame
+        DataFrame containing Hebrew-English mappings and color codes
+        Must have columns for Hebrew names, English names, and color codes
+
+    Returns
+    -------
+    tuple[dict, dict, dict]
+        col_rename : dict
+            Maps Hebrew column names to English names
+        color_dict_party_index : dict 
+            Maps party indices to color codes
+        color_dict_party_name : dict
+            Maps party names to color codes
+    """
+    col_rename = heb_dict_df.T.set_index(0)[1].to_dict()
+    color_dict_party_index = heb_dict_df.T.set_index(0).loc['party_1':][2].to_dict()
+    color_dict_party_name = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()   
+    return col_rename, color_dict_party_index, color_dict_party_name
 
 
-def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_original_gdf.copy()):
+def get_kdtree(gdf: gpd.GeoDataFrame, stat_filter: str) -> gpd.GeoDataFrame:
 
     kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == stat_filter].iloc[0]
     kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
@@ -73,6 +137,7 @@ def get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].va
     gdf_kde = gdf.iloc[indices].copy()
     gdf_kde['kde_distance'] = distances
     return gdf_kde
+
 
 # RUN KMENAS ONLY When The number of cluster is changed!!!!!!
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
@@ -98,11 +163,9 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     gdf['cluster'] = kmeans.labels_
     return df, gdf,  kmeans
 
-stats_data_gdf = gpd.GeoDataFrame()
-stats_data_gdf = get_kdtree()
-stats_data = stats_data_gdf.__geo_interface__
 
-def get_info(feature=None, col_rename=col_rename):
+
+def get_info(feature, col_rename):
     """
     Generate information about a given feature.
 
@@ -124,10 +187,6 @@ def get_info(feature=None, col_rename=col_rename):
 
     return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
-
-
-info = html.Div(children=get_info(), id="info", className="info",
-                style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
 def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
@@ -175,7 +234,7 @@ def generate_barplot(feature=None):
     values = top_ten.values
     # Create a bar plot
     fig = px.bar(x=categories, y=values, labels={
-        'x': '', 'y': ''}, color=categories, color_discrete_map=colors_dict2, title=stat_name)
+        'x': '', 'y': ''}, color=categories, color_discrete_map=color_dict_party_name, title=stat_name)
     fig.update_layout(
         xaxis_tickangle=-90,
         yaxis=dict(range=[0, top_ten.max()+0.1 if top_ten.max()
@@ -262,6 +321,27 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     return df_kmeans, eu_distance
 
 
+
+### Load the data
+heb_dict_df, stats_data_original_gdf = load_data_main()
+
+#### Setting up dictionaries and classes for the map
+col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_color_dicts(heb_dict_df)
+
+# Prepare spatial data and convert Hebrew column names to English using the dictionary
+stats_data_original_gdf.rename(columns=col_rename, inplace=True)
+stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace('No Name', '')
+
+
+stats_data_gdf = gpd.GeoDataFrame()
+stats_data_gdf = get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_original_gdf.copy())
+stats_data = stats_data_gdf.__geo_interface__
+
+info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
+                style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
+
+
+
 app = Dash(title="Similar to me")
 app.css.append_css({
     'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
@@ -317,7 +397,7 @@ app.layout = html.Div(children=[
                                style=won_style_handle,
                                zoomToBoundsOnClick=True,
                                hideout=dict(
-                                   color_dict=colors_dict, style=style, hoverStyle=hover_style, win_party="max_label")
+                                   color_dict=color_dict_party_index, style=style, hoverStyle=hover_style, win_party="max_label")
                                ),
                     dl.Colorbar(id='colorbar', position='bottomright', opacity =0, tickText=['','']),
                     info
@@ -344,7 +424,7 @@ app.layout = html.Div(children=[
 
 @ app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
 def info_hover(feature):
-    return get_info(feature)
+    return get_info(feature = feature, col_rename=col_rename)
 
 @ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
 def controller(radioButton):
@@ -372,7 +452,7 @@ def update_barplot(clickData, fig):
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
-    hideout = {"color_dict":colors_dict, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
+    hideout = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     data_store_temp = {}
     if clickData is not None:
