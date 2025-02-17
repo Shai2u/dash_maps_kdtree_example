@@ -320,7 +320,31 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     eu_distance = distance.euclidean(selected_cluster_attributes, filter_row.values)
     return df_kmeans, eu_distance
 
+def process_stats_data(stats_data_original_gdf: gpd.GeoDataFrame, col_rename: dict) -> gpd.GeoDataFrame:
+    """
+    Process the statistical data GeoDataFrame by renaming columns and cleaning station names.
 
+    Parameters
+    ----------
+    stats_data_original_gdf : geopandas.GeoDataFrame
+        The original GeoDataFrame containing statistical data with Hebrew column names
+    col_rename : dict
+        Dictionary mapping Hebrew column names to English column names
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        The processed GeoDataFrame with renamed columns and cleaned station names
+
+    Notes
+    -----
+    This function performs two main operations:
+    1. Renames columns using the provided mapping dictionary
+    2. Removes 'No Name' text from station names in the 'sta_22_names' column
+    """
+    stats_data_original_gdf.rename(columns=col_rename, inplace=True)
+    stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace('No Name', '')
+    return stats_data_original_gdf
 
 ### Load the data
 heb_dict_df, stats_data_original_gdf = load_data_main()
@@ -329,8 +353,7 @@ heb_dict_df, stats_data_original_gdf = load_data_main()
 col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_color_dicts(heb_dict_df)
 
 # Prepare spatial data and convert Hebrew column names to English using the dictionary
-stats_data_original_gdf.rename(columns=col_rename, inplace=True)
-stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace('No Name', '')
+stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
 
 
 stats_data_gdf = gpd.GeoDataFrame()
