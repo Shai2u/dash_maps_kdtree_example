@@ -574,17 +574,20 @@ def update_near_clster_bar(map_json, kdtree_distance):
     # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
     gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
 
-    fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
-    
-    return fig_kde
+        fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
+        
+        return fig_kde
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), State('kmeans_scatterplot', 'figure'), prevent_initial_call=True)
-def update_kmeans_distance_bar(map_json, feature, saved_model, fig_bar, fig_scatter):
-    # Prevent callback execution on initial load
-    if map_json is None or feature is None:
-        if None in [fig_bar, fig_scatter]:
-            return {}, {}
+@ app.callback(Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), State('kmeans_scatterplot', 'figure'), Input('raio_map_analysis', 'value'), prevent_initial_call=True)
+def update_kmeans_distance_bar(map_json, feature, saved_model, fig_bar, fig_scatter, radio_map_option):
+    if radio_map_option != 'kmeans':
+        return {}, {}
+    else:
+        # Prevent callback execution on initial load
+        if map_json is None or feature is None:
+            if None in [fig_bar, fig_scatter]:
+                return {}, {}
         else:
             return fig_bar, fig_scatter
     
