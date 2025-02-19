@@ -198,6 +198,9 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
         title_y=0.98, 
         )
     fig.update_traces(texttemplate='%{y:.2f}', textposition='outside')
+    fig.update_xaxes(title_text='Statistical Area')
+    fig.update_yaxes(title_text='KDE Distance')
+
     return fig
 
 def generate_barplot(feature=None):
@@ -467,6 +470,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     hideout = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     data_store_temp = {}
+    stats_data = {}
     if clickData is not None:
         feature_id = clickData["properties"]["YISHUV_STAT11"]
         stats_data = stats_data_original_gdf.copy().__geo_interface__
