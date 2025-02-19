@@ -208,7 +208,7 @@ def generate_barplot(feature=None):
     else:
         return {}
     # Select statistical area and select only the relevant columns, sort by votes
-    selected_row = stats_data_gdf[stats_data_gdf['YISHUV_STAT11']
+    selected_row = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11']
                                   == feature_id].iloc[0]
     # Get title name (city + stat name)
     stat_name = f"{selected_row['Shem_Yishuv']} {selected_row['sta_22_names']}"[
@@ -349,9 +349,7 @@ col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_col
 stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
 
 
-stats_data_gdf = gpd.GeoDataFrame()
-stats_data_gdf = get_kdtree(stat_filter=stats_data_original_gdf.sample(1)['YISHUV_STAT11'].values[0], gdf=stats_data_original_gdf.copy())
-stats_data = stats_data_gdf.__geo_interface__
+stats_data = stats_data_original_gdf.copy().__geo_interface__
 
 info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
@@ -472,8 +470,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     data_store_temp = {}
     if clickData is not None:
         feature_id = clickData["properties"]["YISHUV_STAT11"]
-        stats_map_data_gdf= get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
-        stats_data = stats_map_data_gdf.__geo_interface__
+        stats_data = stats_data_original_gdf.copy().__geo_interface__
     else:
         stats_data = map_json
         no_data = True
@@ -494,7 +491,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
             hideout['colorProp'] = 'kde_distance'
-            gdf = get_kdtree(stat_filter=feature_id, gdf=stats_data_gdf.copy())
+            gdf = get_kdtree(stat_filter=feature_id, gdf=stats_data_original_gdf.copy())
             gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
             gdf = gdf.iloc[0:kdtree_distance+1]
             min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
@@ -527,13 +524,13 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                     # If the number of clusters has changed, flag run the kmeans again
                     flag_run_kmeans = True
                 else:
-                    gdf = stats_data_gdf.copy()
+                    gdf = stats_data_original_gdf.copy()
                     kmeans = previous_model
             else:
                 flag_run_kmeans = True
             # Run kmeans if the number of clusters has changed
             if flag_run_kmeans:
-                _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_gdf.copy())
+                _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
 
 
             # Get the attributes of the KMeans instance
@@ -591,7 +588,7 @@ def update_kmeans_distance_bar(map_json, feature, saved_model, fig_bar, fig_scat
         else:
             return fig_bar, fig_scatter
     
-    feature_id = np.random.choice(stats_data_gdf['YISHUV_STAT11'].values)
+    feature_id = np.random.choice(stats_data_original_gdf.copy()['YISHUV_STAT11'].values)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     gdf = gpd.GeoDataFrame.from_features(map_json['features'])
