@@ -137,7 +137,6 @@ def get_kdtree(gdf: gpd.GeoDataFrame, stat_filter: str) -> gpd.GeoDataFrame:
     gdf_kde['kde_distance'] = distances
     return gdf_kde
 
-# RUN KMENAS ONLY When The number of cluster is changed!!!!!!
 def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     gdf = stats_map_data_gdf.copy()
     df = gdf.copy()
@@ -511,7 +510,8 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         colorbar,
                         info
                         ]
-            return map_layers, data_store_temp
+            kde_fig = update_near_clster_bar(gdf, kdtree_distance, radio_map_option)
+            return map_layers, data_store_temp, kde_fig
         
         else:
             hideout['color_dict'] = kmeans_color_dict
@@ -557,19 +557,15 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             # Store the byte stream in a variable
             data_store_temp = {'model_stored':'kmeans_model.joblib'}
 
-    return map_layers, data_store_temp
+    return map_layers, data_store_temp, {}
 
 
-#### ! UPDATE THIS CALLBACK it should be cancel first update map than run this!
-@ app.callback(Output('kde_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('near_cluster', 'value'), Input('raio_map_analysis', 'value'), prevent_initial_call=True)
-def update_near_clster_bar(map_json, kdtree_distance, radio_map_option):
+def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
     if radio_map_option != 'kdtree':
         return {}
     else:
         
         # Convert GeoJSON data to GeoDataFrame
-        gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-
         gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
         # Generate a barplot based on the KDE distances
         gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
