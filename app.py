@@ -461,7 +461,7 @@ def update_barplot(clickData, fig):
         return generate_barplot(clickData)
 
 
-@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
+@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('kde_distance_barplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
