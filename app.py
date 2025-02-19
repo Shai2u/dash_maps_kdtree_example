@@ -560,16 +560,21 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     return map_layers, data_store_temp
 
 
+#### ! UPDATE THIS CALLBACK it should be cancel first update map than run this!
+@ app.callback(Output('kde_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('near_cluster', 'value'), Input('raio_map_analysis', 'value'), prevent_initial_call=True)
+def update_near_clster_bar(map_json, kdtree_distance, radio_map_option):
+    if radio_map_option != 'kdtree':
+        return {}
+    else:
+        
+        # Convert GeoJSON data to GeoDataFrame
+        gdf = gpd.GeoDataFrame.from_features(map_json['features'])
 
-@ app.callback(Output('kde_distance_barplot', 'figure'), Input('stats_layer', 'data'), Input('near_cluster', 'value'))
-def update_near_clster_bar(map_json, kdtree_distance):
-    # Convert GeoJSON data to GeoDataFrame
-    gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-    gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
-    # Generate a barplot based on the KDE distances
-    gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
-    # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
-    gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
+        gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
+        # Generate a barplot based on the KDE distances
+        gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
+        # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
+        gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
 
         fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
         
