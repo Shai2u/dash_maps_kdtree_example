@@ -471,7 +471,7 @@ Input('kmeans_cluster', 'value'))
 def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
-    data_store_temp = {}
+    data_store_temp = {'model_stored':'kmeans_model.joblib'}
     stats_data = {}
     if clickData is not None:
         stats_data = stats_data_original_gdf.copy().__geo_interface__
@@ -527,17 +527,16 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             hideout['color_dict'] = kmeans_color_dict
             hideout['clusters_col'] = 'cluster'
             # Check if kmeans_cluster value has changed from previous run
-            flag_run_kmeans = False
-            if data_store_temp.get('model_stored') and os.path.exists(data_store_temp.get('model_stored')):
+            flag_run_kmeans = True
+            ##### BOOKMARK try to cancel usage of the saved model
+            if  os.path.exists(data_store_temp.get('model_stored')):
                 previous_model = joblib.load(data_store_temp.get('model_stored'))
-                if previous_model.n_clusters != kmeans_cluster:
+                if previous_model.n_clusters == kmeans_cluster:
                     # If the number of clusters has changed, flag run the kmeans again
-                    flag_run_kmeans = True
-                else:
-                    gdf = stats_data_original_gdf.copy()
+                    gdf = gpd.GeoDataFrame.from_features(map_json['features'])
                     kmeans = previous_model
-            else:
-                flag_run_kmeans = True
+                    flag_run_kmeans = False
+
             # Run kmeans if the number of clusters has changed
             if flag_run_kmeans:
                 _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
