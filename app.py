@@ -490,6 +490,10 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                             ),
                             info
                             ]
+            if os.path.exists(data_store_temp.get('model_stored')):
+                os.remove(data_store_temp.get('model_stored'))
+
+            return map_layers, data_store_temp, {}, {}, {}
         elif radio_map_option == 'kdtree':
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
@@ -536,9 +540,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             if flag_run_kmeans:
                 _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
 
-
             # Get the attributes of the KMeans instance
-
             stats_data = gdf.__geo_interface__
             
             map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
@@ -551,6 +553,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         ),
                         info
                         ]
+            fig_bar, fig_scatter = update_kmeans_distance_bar(gdf, clickData, radio_map_option, kmeans)
 
             
             # Store the kmeans model in dcc.Store for later use
@@ -560,8 +563,9 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
 
             # Store the byte stream in a variable
             data_store_temp = {'model_stored':'kmeans_model.joblib'}
+            return map_layers, data_store_temp, {}, fig_bar, fig_scatter    
 
-    return map_layers, data_store_temp, {}
+    return map_layers, data_store_temp, {}, {}, {}
 
 
 def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
@@ -581,37 +585,24 @@ def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
         return fig_kde
     # Generate a sample barplot
 
-@ app.callback(Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), State('temp-data-store', 'data'), State('kmeans_distance_barplot', 'figure'), State('kmeans_scatterplot', 'figure'), Input('raio_map_analysis', 'value'), prevent_initial_call=True)
-def update_kmeans_distance_bar(map_json, feature, saved_model, fig_bar, fig_scatter, radio_map_option):
+# Method is too long, split to subroutines and graph generators
+def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     if radio_map_option != 'kmeans':
         return {}, {}
-    else:
-        # Prevent callback execution on initial load
-        if map_json is None or feature is None:
-            if None in [fig_bar, fig_scatter]:
-                return {}, {}
-        else:
-            return fig_bar, fig_scatter
     
     feature_id = np.random.choice(stats_data_original_gdf.copy()['YISHUV_STAT11'].values)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
-    gdf = gpd.GeoDataFrame.from_features(map_json['features'])
+
     if 'cluster' not in gdf.columns:
         return {}, {}
     if 0 not in gdf['cluster'].unique():
         return {}, {}
     
-    if saved_model == {} or saved_model is None:
-        return {}, {}
-    else:
-        kmeans_model = joblib.load(saved_model['model_stored'])
-
-        df = gdf.copy()
-        df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-            'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    df = gdf.copy()
+    df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+        'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
-    # df, gdf,  kmeans_model =  get_kmeans_cluster_add_column(kmeans_cluster, gdf)
     df_copy = gdf.copy()
     feature_index_id = df_copy[df_copy['YISHUV_STAT11'] == feature_id].index[0]
     kdf_filter_row = df_copy.loc[feature_index_id]
