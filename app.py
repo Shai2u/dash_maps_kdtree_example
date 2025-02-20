@@ -351,7 +351,7 @@ col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_col
 stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
 
 
-stats_data = stats_data_original_gdf.copy().__geo_interface__
+inital_stats_data = stats_data_original_gdf.copy().__geo_interface__
 
 info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
@@ -407,7 +407,7 @@ app.layout = html.Div(children=[
                         url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                     dl.LocateControl(
                         locateOptions={'enableHighAccuracy': True}),
-                    dl.GeoJSON(id='stats_layer', data=stats_data,
+                    dl.GeoJSON(id='stats_layer', data=inital_stats_data,
                                hoverStyle=hover_style,
                                style=won_style_handle,
                                zoomToBoundsOnClick=True,
