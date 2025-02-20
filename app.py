@@ -113,9 +113,9 @@ def setup_col_rename_color_dicts(heb_dict_df: pd.DataFrame) -> tuple[dict, dict,
     color_dict_party_name = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()   
     return col_rename, color_dict_party_index, color_dict_party_name
 
-def get_kdtree(gdf: gpd.GeoDataFrame, stat_filter: str) -> gpd.GeoDataFrame:
+def get_kdtree(gdf: gpd.GeoDataFrame, feature: str) -> gpd.GeoDataFrame:
 
-    kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == stat_filter].iloc[0]
+    kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == feature["properties"]["YISHUV_STAT11"]].iloc[0]
     kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
                        'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
@@ -472,7 +472,6 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     data_store_temp = {}
     stats_data = {}
     if clickData is not None:
-        feature_id = clickData["properties"]["YISHUV_STAT11"]
         stats_data = stats_data_original_gdf.copy().__geo_interface__
     else:
         stats_data = map_json
@@ -498,7 +497,8 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
             hideout['colorProp'] = 'kde_distance'
-            gdf = get_kdtree(stat_filter=feature_id, gdf=stats_data_original_gdf.copy())
+            kmeans = {}
+            gdf = get_kdtree(feature=clickData, gdf=stats_data_original_gdf.copy())
             gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
             gdf = gdf.iloc[0:kdtree_distance+1]
             min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
