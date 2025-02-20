@@ -521,7 +521,9 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                         info
                         ]
             kde_fig = update_near_clster_bar(gdf, kdtree_distance, radio_map_option)
-            return map_layers, data_store_temp, kde_fig
+            if os.path.exists(data_store_temp.get('model_stored')):
+                os.remove(data_store_temp.get('model_stored'))
+            return map_layers, data_store_temp, kde_fig, {}, {}
         
         else:
             hideout['color_dict'] = kmeans_color_dict
