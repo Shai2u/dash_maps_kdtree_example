@@ -290,9 +290,12 @@ def generate_barplot_fig(feature=None):
         template='plotly_white',
         xaxis_showgrid=False,
         yaxis_showgrid=False
+        margin=dict(l=0, r=0, t=0, b=0),
+        title_y=0.9,
+        title_x=0.6,
+        font=dict(size=14)
     )
     fig.update_traces(texttemplate='%{y:.1%}', textposition='outside')
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
     return fig
 
 def generate_histogram_with_line(df_kmeans, eu_distance):
@@ -584,7 +587,6 @@ def _remove_model_stored_if_exists(data_store_temp, model_str):
     if os.path.exists(data_store_temp.get(model_str)):
             os.remove(data_store_temp.get(model_str))
 
-
 def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict):
     """Generate scatter plot comparing cluster distances to geographic distances.
 
@@ -654,11 +656,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
             customdata=kmeans_geo_distance[['Shem_Yishuv', 'sta_22_names', 'YISHUV_STAT11']].values
     )
 
-    fig_scatter.update_layout(
-        template='plotly_white',
-        height=300,
-        showlegend=True
-    )
+
     # Calculate polynomial regression
     x = kmeans_geo_distance['distance_to_cluster']
     y = kmeans_geo_distance['geo_distance']
@@ -698,6 +696,11 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     fig_scatter.update_xaxes(range=[0, x.max()])
     fig_scatter.update_yaxes(range=[0, y.max()])
     fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
+    fig_scatter.update_layout(
+        template='plotly_white',
+        height=300,
+        showlegend=True
+    )
     return fig_scatter
 
 
@@ -969,7 +972,7 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
     hideout, data_store_temp, stats_data = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}, {'model_stored':'kmeans_model.joblib'}, {}
     if clickData is not None:
         stats_data = stats_data_original_gdf.copy().__geo_interface__
-        elections_won_fig = generate_barplot(clickData)
+        elections_won_fig = generate_barplot_fig(clickData)
         if radio_map_option =='who_won':
             map_layers = _prepare_map_layers_for_winner(stats_data, hideout)
             _remove_model_stored_if_exists(data_store_temp, 'model_stored')
@@ -1067,7 +1070,6 @@ def controller(radioButton):
         return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
     else:
         return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
