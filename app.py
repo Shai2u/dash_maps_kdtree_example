@@ -289,7 +289,7 @@ def generate_barplot_fig(feature=None):
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
-        yaxis_showgrid=False
+        yaxis_showgrid=False,
         margin=dict(l=0, r=0, t=0, b=0),
         title_y=0.9,
         title_x=0.6,
@@ -350,7 +350,7 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
     
 
     return fig
-#### SIMPLIFY THIS FUNCTION
+
 def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     """Get Euclidean distance between selected cluster and all other clusters.
 
@@ -377,7 +377,6 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     if 'cluster' in df_subset.columns:
         df_subset.drop(columns='cluster', inplace=True)
     # Get the attributes of the selected center cluster
-    print('Selected Cluster', selected_cluster)
     selected_cluster_attributes = kmeans.__dict__['cluster_centers_'][selected_cluster]
         
     df_subset = df_subset.apply(lambda p: p/p['bzb'], axis=1)
@@ -615,6 +614,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     A polynomial regression line is fitted to show the trend.
     Crosshair lines highlight the selected feature's position.
     """
+    # Create scatter plot attribute distance  vs geo distance
     fig_scatter = px.scatter(
         kmeans_geo_distance, 
         x='distance_to_cluster', 
@@ -646,6 +646,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
         name='Selected Area'
     )
 
+    # Add hover data showing extra details and add customdata for further interaction
     fig_scatter.update_traces(
             hovertemplate="<br>".join([
                 "Distance to Cluster: %{x:.2f}",
@@ -691,6 +692,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
         text=f'R² = {r2:.3f}',
         showarrow=False,
         yshift=20,
+        xshift=20,
         font=dict(size=12)
     )
     fig_scatter.update_xaxes(range=[0, x.max()])
