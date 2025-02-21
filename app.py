@@ -435,19 +435,6 @@ app.layout = html.Div(children=[
 ])
 
 
-@ app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
-def info_hover(feature):
-    return get_info(feature = feature, col_rename=col_rename)
-
-@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
-def controller(radioButton):
-    if radioButton == 'who_won':
-        return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
-    elif radioButton == 'kdtree':
-        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
-    else:
-        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
-
 def _prepare_map_layers_for_winner(stats_data, hideout):
     map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                             dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
