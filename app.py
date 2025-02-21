@@ -179,7 +179,6 @@ def get_info(feature, col_rename):
     header = []
     if feature is None:
         return
-
     return header + [html.B(feature["properties"]["Shem_Yishuv"]), html.B(" "), html.B(feature["properties"]["sta_22_names"]), html.Br(),
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
@@ -577,12 +576,12 @@ def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
         return fig_kde
     # Generate a sample barplot
 
+
 # Method is too long, split to subroutines and graph generators
 def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     if radio_map_option != 'kmeans':
         return {}, {}
-    
-    feature_id = np.random.choice(stats_data_original_gdf.copy()['YISHUV_STAT11'].values)
+    feature_id = -1
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
 
@@ -592,14 +591,12 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
         return {}, {}
     
     df = gdf.copy()
-    df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+    df = df.drop(['geometry', 'Shem_Yishuv_English',
         'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
-    df_copy = gdf.copy()
-    feature_index_id = df_copy[df_copy['YISHUV_STAT11'] == feature_id].index[0]
-    kdf_filter_row = df_copy.loc[feature_index_id]
-    kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-                'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']).copy()
+    feature_index_id = df[df['YISHUV_STAT11'] == feature_id].index[0]
+    kdf_filter_row = df.loc[feature_index_id].copy().drop(['YISHUV_STAT11'])
+    df.drop(['YISHUV_STAT11'], inplace=True, axis=1)
     
     df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
     fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
