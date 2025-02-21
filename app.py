@@ -340,100 +340,6 @@ def process_stats_data(stats_data_original_gdf: gpd.GeoDataFrame, col_rename: di
     stats_data_original_gdf['sta_22_names'] = stats_data_original_gdf['sta_22_names'].str.replace('No Name', '')
     return stats_data_original_gdf
 
-### Load the data
-heb_dict_df, stats_data_original_gdf = load_data_main()
-
-#### Setting up dictionaries and classes for the map
-col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_color_dicts(heb_dict_df)
-
-# Prepare spatial data and convert Hebrew column names to English using the dictionary
-stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
-
-inital_stats_data = stats_data_original_gdf.copy().__geo_interface__
-
-info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
-                style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
-
-
-app = Dash(title="Similar to me")
-app.css.append_css({
-    'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
-})
-app.layout = html.Div(children=[
-    html.Div(
-        [
-            html.Div([
-                html.H4("Map Analysis Options"),
-                html.Div([
-                html.Div(dcc.RadioItems(
-                    id='raio_map_analysis',
-                    options=map_analysis_radio_options,
-                    value='who_won',
-                    labelStyle={'display': 'inline-block',
-                                'margin-right': '10px'}
-                )),
-                html.Div(dcc.Slider(
-                    id='near_cluster',
-                    min=5,
-                    max=100,
-                    step=1,
-                    value=25,
-                    marks={i: str(i) for i in range(10, 101, 10)},
-                    tooltip={"placement": "bottom", "always_visible": True},
-
-                ),id='near_cluster_div', style={'width': '60%'}),
-                 html.Div(dcc.Slider(
-                    id='kmeans_cluster',
-                    min=2,
-                    max=10,
-                    step=1,
-                    value=4,
-                    marks={i: str(i) for i in range(2, 11, 1)},
-                    tooltip={"placement": "bottom", "always_visible": True},
-                ),id='kmeans_cluster_div', style={'width': '60%', 'display':'none'}),
-
-                ],style={
-                    'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
-                dcc.Graph(id='elections_barplot'), 
-                html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}),
-                html.Div([dcc.Graph(id='kmeans_distance_barplot'), dcc.Graph(id='kmeans_scatterplot')],id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
-                    'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
-                'minWidth': '200px', 'margin-right': '2%'}),
-            html.Div([
-                dl.Map([
-                    dl.TileLayer(
-                        url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                    dl.LocateControl(
-                        locateOptions={'enableHighAccuracy': True}),
-                    dl.GeoJSON(id='stats_layer', data=inital_stats_data,
-                               hoverStyle=hover_style,
-                               style=won_style_handle,
-                               zoomToBoundsOnClick=True,
-                               hideout=dict(
-                                   color_dict=color_dict_party_index, style=style, hoverStyle=hover_style, win_party="max_label")
-                               ),
-                    dl.Colorbar(id='colorbar', position='bottomright', opacity =0, tickText=['','']),
-                    info
-                ],
-                    center=[32, 34.9],
-                    zoom=12,
-                    style={'height': '99vh'},
-                    id='env_map',
-                    dragging=True,
-                    zoomControl=True,
-                    scrollWheelZoom=True,
-                    doubleClickZoom=True,
-                    boxZoom=True,
-                )
-
-            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'margin-left': '2%'}
-            )
-        ],
-    ),
-    dcc.Store(id='temp-data-store'),
-
-])
-
 
 def _prepare_map_layers_for_winner(stats_data, hideout):
     map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
@@ -594,6 +500,102 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
     return fig_scatter
 
+
+### Load the data
+heb_dict_df, stats_data_original_gdf = load_data_main()
+
+#### Setting up dictionaries and classes for the map
+col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_color_dicts(heb_dict_df)
+
+# Prepare spatial data and convert Hebrew column names to English using the dictionary
+stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
+
+inital_stats_data = stats_data_original_gdf.copy().__geo_interface__
+
+info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
+                style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
+
+
+app = Dash(title="Similar to me")
+app.css.append_css({
+    'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
+})
+app.layout = html.Div(children=[
+    html.Div(
+        [
+            html.Div([
+                html.H4("Map Analysis Options"),
+                html.Div([
+                html.Div(dcc.RadioItems(
+                    id='raio_map_analysis',
+                    options=map_analysis_radio_options,
+                    value='who_won',
+                    labelStyle={'display': 'inline-block',
+                                'margin-right': '10px'}
+                )),
+                html.Div(dcc.Slider(
+                    id='near_cluster',
+                    min=5,
+                    max=100,
+                    step=1,
+                    value=25,
+                    marks={i: str(i) for i in range(10, 101, 10)},
+                    tooltip={"placement": "bottom", "always_visible": True},
+
+                ),id='near_cluster_div', style={'width': '60%'}),
+                 html.Div(dcc.Slider(
+                    id='kmeans_cluster',
+                    min=2,
+                    max=10,
+                    step=1,
+                    value=4,
+                    marks={i: str(i) for i in range(2, 11, 1)},
+                    tooltip={"placement": "bottom", "always_visible": True},
+                ),id='kmeans_cluster_div', style={'width': '60%', 'display':'none'}),
+
+                ],style={
+                    'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
+                dcc.Graph(id='elections_barplot'), 
+                html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}),
+                html.Div([dcc.Graph(id='kmeans_distance_barplot'), dcc.Graph(id='kmeans_scatterplot')],id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
+                    'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
+                'minWidth': '200px', 'margin-right': '2%'}),
+            html.Div([
+                dl.Map([
+                    dl.TileLayer(
+                        url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                    dl.LocateControl(
+                        locateOptions={'enableHighAccuracy': True}),
+                    dl.GeoJSON(id='stats_layer', data=inital_stats_data,
+                               hoverStyle=hover_style,
+                               style=won_style_handle,
+                               zoomToBoundsOnClick=True,
+                               hideout=dict(
+                                   color_dict=color_dict_party_index, style=style, hoverStyle=hover_style, win_party="max_label")
+                               ),
+                    dl.Colorbar(id='colorbar', position='bottomright', opacity =0, tickText=['','']),
+                    info
+                ],
+                    center=[32, 34.9],
+                    zoom=12,
+                    style={'height': '99vh'},
+                    id='env_map',
+                    dragging=True,
+                    zoomControl=True,
+                    scrollWheelZoom=True,
+                    doubleClickZoom=True,
+                    boxZoom=True,
+                )
+
+            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'margin-left': '2%'}
+            )
+        ],
+    ),
+    dcc.Store(id='temp-data-store'),
+
+])
+
+
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
@@ -708,6 +710,21 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
 
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), Input('kmeans_scatterplot', 'clickData'), prevent_initial_call=True)
 def zoom_to_feature_by_bar(clickData1, clickData2):
+    """Zoom map viewport to selected feature based on bar/scatter plot clicks.
+    
+    Parameters
+    ----------
+    clickData1 : dict or None
+        Click data from KDE distance bar plot
+    clickData2 : dict or None
+        Click data from KMeans scatter plot
+        
+    Returns
+    -------
+    dict
+        Viewport settings containing center coordinates, zoom level and transition
+        animation. Empty dict if no valid click data.
+    """
     stat = -1
     if clickData1 is not None:
         stat = clickData1['points'][0]['customdata'][0]
@@ -718,6 +735,20 @@ def zoom_to_feature_by_bar(clickData1, clickData2):
     centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
     return dict(center=[centroid.y, centroid.x], zoom=15, transition="flyTo")
 
-    
+
+@ app.callback(Output("info", "children"), Input("stats_layer", "hoverData"))
+def info_hover(feature):
+    return get_info(feature = feature, col_rename=col_rename)
+
+@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
+def controller(radioButton):
+    if radioButton == 'who_won':
+        return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
+    elif radioButton == 'kdtree':
+        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
+    else:
+        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
