@@ -114,7 +114,31 @@ def setup_col_rename_color_dicts(heb_dict_df: pd.DataFrame) -> tuple[dict, dict,
     return col_rename, color_dict_party_index, color_dict_party_name
 
 def get_kdtree(gdf: gpd.GeoDataFrame, feature: str) -> gpd.GeoDataFrame:
+    """Build KD-tree from voting data and find nearest neighbors to selected feature.
 
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame containing voting data and geometries
+    feature : str
+        Dictionary containing properties of selected feature including YISHUV_STAT11 ID
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        GeoDataFrame containing all features sorted by distance to selected feature,
+        with added 'kde_distance' column
+
+    Notes
+    -----
+    The function:
+    1. Extracts the row for the selected feature
+    2. Drops non-numeric columns from both selected row and full dataset
+    3. Normalizes voting data by dividing by total votes ('bzb')
+    4. Builds KD-tree from normalized data
+    5. Finds distances to all other features
+    6. Returns original GeoDataFrame with added distances
+    """
     kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == feature["properties"]["YISHUV_STAT11"]].iloc[0]
     kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
                        'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
@@ -183,6 +207,20 @@ def get_info(feature, col_rename):
                      html.Span(col_rename.get(feature["properties"]["max_label"]))]
 
 def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
+    """Build bar plot showing nearest neighbors based on KDE distances.
+
+    Parameters
+    ----------
+    gdf_sorted : pd.DataFrame
+        DataFrame containing sorted features by KDE distance
+    kdtree_distance : int
+        Number of nearest neighbors to show
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        Bar plot figure showing nearest neighbors by KDE distance
+    """
     fig = px.bar(gdf_sorted, x='name_stat', y='kde_distance', title=f'Top {kdtree_distance} most similar voting pattern', custom_data=['YISHUV_STAT11'], barmode='group')
     fig.update_layout(
         xaxis_tickangle=-90,
@@ -202,7 +240,20 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
 
     return fig
 
-def generate_barplot(feature=None):
+def generate_barplot_fig(feature=None):
+    """Generate bar plot showing top 6 parties by votes.
+
+    Parameters
+    ----------
+    feature : dict, optional
+        A dictionary representing a feature with properties. Default is None.
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        Bar plot figure showing top 6 parties by votes
+
+    """
     print('feature: ', feature)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
@@ -245,7 +296,21 @@ def generate_barplot(feature=None):
     return fig
 
 def generate_histogram_with_line(df_kmeans, eu_distance):
+    """Generate histogram with vertical line at Euclidean distance.
 
+    Parameters
+    ----------
+    df_kmeans : pd.DataFrame
+        DataFrame containing cluster distances
+    eu_distance : float
+        Euclidean distance
+
+    Returns
+    -------
+    fig : plotly.graph_objects.Figure
+        Histogram figure with vertical line at Euclidean distance
+
+    """
     # Plot histogram of df_kmeans distances using Plotly
     # fig = px.histogram(df_kmeans, x='distance_to_cluster', nbins=30, title='Histogram of Distances to Cluster Center')
 
@@ -282,8 +347,24 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
     
 
     return fig
-
+#### SIMPLIFY THIS FUNCTION
 def get_kmeans_euclidian_distance(df, filter_row, kmeans):
+    """Get Euclidean distance between selected cluster and all other clusters.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame containing cluster data
+    filter_row : pd.Series
+        Series containing filter row data
+    kmeans : sklearn.cluster.KMeans
+        KMeans model
+
+    Returns
+    -------
+    tuple
+        Tuple containing:
+    """
     filter_row = (filter_row/filter_row['bzb']).drop('bzb')
     for col in ['votes', 'invalid_votes', 'valid_votes','kde_distance', 'cluster', 'id']:
         if col in filter_row.index:
@@ -342,6 +423,28 @@ def process_stats_data(stats_data_original_gdf: gpd.GeoDataFrame, col_rename: di
 
 
 def _prepare_map_layers_for_winner(stats_data, hideout):
+    """Prepare map layers for winner analysis.
+
+    Parameters
+    ----------
+    stats_data : dict
+        Dictionary containing statistical data
+    hideout : dict
+        Dictionary containing map settings
+
+    Returns
+    -------
+    list
+        List of map layers
+
+    Notes
+    -----
+    The function creates a list of map layers including:
+    - Tile layer for map tiles
+    - Locate control for user location
+    - GeoJSON layer for statistical data
+    - Info component for feature details    
+    """
     map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                             dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
                             dl.GeoJSON(id='stats_layer', data=stats_data,
@@ -355,6 +458,27 @@ def _prepare_map_layers_for_winner(stats_data, hideout):
     return map_layers
 
 def _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar):
+    """Prepare map layers for k-d tree analysis.
+
+    Parameters
+    ----------
+    stats_data : dict
+        Dictionary containing statistical data
+        hideout : dict
+        Dictionary containing map settings
+    colorbar : dict
+        Dictionary containing colorbar settings
+
+    Returns
+    -------
+    list
+        List of map layers
+
+    Notes
+    -----
+    The function creates a list of map layers including:
+
+    """
     map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                         dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
                         dl.GeoJSON(id='stats_layer', data=stats_data,
@@ -369,6 +493,26 @@ def _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar):
     return map_layers
 
 def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
+    """Prepare map variables for k-d tree analysis.
+
+    Parameters
+    ----------
+    hideout : dict
+        Dictionary containing map settings
+    clickData : dict
+        Dictionary containing click data
+    kdtree_distance : int
+        Number of nearest neighbors to show
+
+    Returns
+    -------
+    tuple
+        Tuple containing:
+        - stats_data: Dictionary containing statistical data
+        - hideout: Dictionary containing map settings
+        - colorbar: Dictionary containing colorbar settings
+        - gdf: GeoDataFrame containing k-d tree data
+    """
     hideout['colorscale'] = kde_colorscale
     hideout['classes'] = kde_classes
     hideout['colorProp'] = 'kde_distance'
@@ -383,6 +527,20 @@ def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
     return stats_data, hideout, colorbar, gdf
 
 def _prepare_map_layers_for_kmeans(stats_data, hideout):
+    """Prepare map layers for k-means analysis.
+
+    Parameters
+    ----------
+    stats_data : dict
+        Dictionary containing statistical data
+    hideout : dict
+        Dictionary containing map settings
+
+    Returns
+    -------
+    list
+        List of map layers
+    """
     map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
             dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
             dl.GeoJSON(id='stats_layer', data=stats_data,
@@ -395,6 +553,21 @@ def _prepare_map_layers_for_kmeans(stats_data, hideout):
             ]
     return map_layers
 def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
+    """Prepare GeoDataFrame and KMeans model for k-means analysis.
+
+    Parameters
+    ----------
+    data_store_temp : dict
+        Dictionary containing data store temporary data
+    kmeans_cluster : int
+        Number of clusters for k-means analysis
+    map_json : dict
+        Dictionary containing map JSON data
+
+    Returns
+    -------
+    tuple
+    """
     gdf = {}
     kmeans = {}
     if  os.path.exists(data_store_temp.get('model_stored')):
@@ -413,6 +586,33 @@ def _remove_model_stored_if_exists(data_store_temp, model_str):
 
 
 def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict):
+    """Generate scatter plot comparing cluster distances to geographic distances.
+
+    Parameters
+    ----------
+    kmeans_geo_distance : pd.DataFrame
+        DataFrame containing cluster distances and geographic distances for each area
+    selected_feature_distances_dict : dict
+        Dictionary containing distance metrics for the selected feature
+
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        Scatter plot figure with:
+        - Points showing cluster vs geographic distances
+        - Crosshair lines highlighting selected feature
+        - Polynomial regression line with R² value
+        - Hover data showing city and statistical area info
+
+    Notes
+    -----
+    The scatter plot shows the relationship between:
+    - Distance to cluster center (x-axis)
+    - Geographic distance (y-axis) 
+    
+    A polynomial regression line is fitted to show the trend.
+    Crosshair lines highlight the selected feature's position.
+    """
     fig_scatter = px.scatter(
         kmeans_geo_distance, 
         x='distance_to_cluster', 
@@ -499,6 +699,131 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     fig_scatter.update_yaxes(range=[0, y.max()])
     fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
     return fig_scatter
+
+
+
+def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
+    """Update the bar plot showing nearest neighbors based on KDTree distances.
+
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+        GeoDataFrame containing the spatial data and KDE distances
+    kdtree_distance : int
+        Number of nearest neighbors to show
+    radio_map_option : str
+        Selected analysis mode ('kdtree' or other)
+
+    Returns
+    -------
+    dict
+        Bar plot figure showing nearest neighbors and their distances.
+        Empty dict if radio_map_option is not 'kdtree'.
+
+    Notes
+    -----
+    The function:
+    1. Filters out self-distances (kde_distance > 0)
+    2. Takes top k nearest neighbors based on kdtree_distance
+    3. Creates name labels combining settlement name and stats
+    4. Generates bar plot using build_near_clsuter_bar_fig
+    """
+    if radio_map_option != 'kdtree':
+        return {}
+    else:
+        # Convert GeoJSON data to GeoDataFrame
+        gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
+        # Generate a barplot based on the KDE distances
+        gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
+        # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
+        gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
+
+        fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
+        
+        return fig_kde
+
+
+# Method is too long, split to subroutines and graph generators
+def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
+    """Update KMeans distance bar and scatter plots based on selected feature.
+
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+        GeoDataFrame containing the spatial data and cluster assignments
+    feature : dict
+        Selected feature properties including YISHUV_STAT11 ID
+    radio_map_option : str
+        Selected analysis mode ('kmeans' or other)
+    kmeans_model : sklearn.cluster.KMeans
+        Fitted KMeans model
+
+    Returns
+    -------
+    tuple[dict, dict]
+        fig_bar : dict
+            Bar plot figure showing cluster distances
+        fig_scatter : dict
+            Scatter plot figure showing geographic vs cluster distances
+            
+    Notes
+    -----
+    If radio_map_option is not 'kmeans', returns empty figures.
+    Otherwise:
+    1. Calculates Euclidean distances to cluster centers
+    2. Generates histogram of distances with vertical line for selected feature
+    3. Calculates geographic distances using KDTree
+    4. Creates scatter plot comparing geographic vs cluster distances
+    """
+    if radio_map_option != 'kmeans':
+        return {}, {}
+    feature_id = -1
+    if feature is not None:
+        feature_id = feature["properties"]["YISHUV_STAT11"]
+    
+    df = gdf.copy()
+    df = df.drop(['geometry', 'Shem_Yishuv_English',
+        'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
+    
+    feature_index_id = df[df['YISHUV_STAT11'] == feature_id].index[0]
+    kdf_filter_row = df.loc[feature_index_id].copy().drop(['YISHUV_STAT11'])
+    df.drop(['YISHUV_STAT11'], inplace=True, axis=1)
+    
+    df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
+    fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
+    
+    gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
+    centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names']]
+    gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names' ]]
+
+    centro_filter_row['x'] = centro_filter_row['geometry'].x
+    centro_filter_row['y'] = centro_filter_row['geometry'].y
+    centro_filter_row = centro_filter_row.drop(['cluster', 'geometry'])
+
+    gdf_filter_cluster['x'] = gdf_filter_cluster['geometry'].x
+    gdf_filter_cluster['y'] = gdf_filter_cluster['geometry'].y
+    gdf_filter_cluster.drop(columns = ['cluster', 'geometry'], inplace=True)
+
+    # this is wrong! I should take the closest value to cluster and that should messure the distnace to all the other points, and than take the selectd zone and check it's location
+    # FIX THIS!
+    tree = KDTree(gdf_filter_cluster[['x', 'y']].values)
+
+    # Query KDTree for the 3 nearest neighbors (including the row itself)
+    distances, indices = tree.query(centro_filter_row[['x', 'y']].values, k=len(gdf_filter_cluster))
+    gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
+    gdf_filter_cluster['geo_distance'] = distances
+    
+    gdf_filter_cluster = gdf_filter_cluster.sort_index()
+    df_kmeans = df_kmeans.sort_index()
+
+    # concat the geo distance (mulitipied by 111 to convert to km) and the distance to cluster
+    kmeans_geo_distance = pd.concat([gdf_filter_cluster[['Shem_Yishuv', 'sta_22_names' ,'YISHUV_STAT11', 'geo_distance']], df_kmeans[['distance_to_cluster']]], axis=1)
+    kmeans_geo_distance['geo_distance'] = kmeans_geo_distance['geo_distance']*111
+    selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
+    # feature_index_id
+    
+    fig_scatter = _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict)
+    return fig_bar, fig_scatter
 
 
 ### Load the data
@@ -599,6 +924,48 @@ app.layout = html.Div(children=[
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
+    """Update map widgets based on user interactions and selected analysis mode.
+
+    Parameters
+    ----------
+    map_layers : list
+        Current map layers configuration
+    map_json : dict
+        GeoJSON data for the map
+    elections_won_fig_previous : dict
+        Previous elections results figure
+    clickData : dict
+        Data from clicked location on map
+    radio_map_option : str
+        Selected analysis mode ('who_won', 'kdtree', or 'kmeans')
+    kdtree_distance : int
+        Number of nearest neighbors for KDTree analysis
+    kmeans_cluster : int
+        Number of clusters for KMeans analysis
+
+    Returns
+    -------
+    tuple
+        map_layers : list
+            Updated map layers configuration
+        data_store_temp : dict
+            Temporary data storage including model path
+        elections_won_fig : dict
+            Updated elections results figure
+        kde_fig : dict
+            KDE distance bar plot figure (empty if not in kdtree mode)
+        fig_bar : dict
+            KMeans distance bar plot figure (empty if not in kmeans mode)
+        fig_scatter : dict
+            KMeans scatter plot figure (empty if not in kmeans mode)
+
+    Notes
+    -----
+    This function handles three analysis modes:
+    - 'who_won': Shows election winners
+    - 'kdtree': Shows nearest neighbors using KDTree
+    - 'kmeans': Shows clustering analysis using KMeans
+    """
     hideout, data_store_temp, stats_data = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}, {'model_stored':'kmeans_model.joblib'}, {}
     if clickData is not None:
         stats_data = stats_data_original_gdf.copy().__geo_interface__
@@ -636,78 +1003,6 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
         elections_won_fig_previous = {}
     return map_layers, data_store_temp, elections_won_fig_previous, {}, {}, {}
 
-
-def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
-    if radio_map_option != 'kdtree':
-        return {}
-    else:
-        
-        # Convert GeoJSON data to GeoDataFrame
-        gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
-        # Generate a barplot based on the KDE distances
-        gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
-        # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
-        gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
-
-        fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
-        
-        return fig_kde
-    # Generate a sample barplot
-
-
-# Method is too long, split to subroutines and graph generators
-def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
-    if radio_map_option != 'kmeans':
-        return {}, {}
-    feature_id = -1
-    if feature is not None:
-        feature_id = feature["properties"]["YISHUV_STAT11"]
-    
-    df = gdf.copy()
-    df = df.drop(['geometry', 'Shem_Yishuv_English',
-        'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
-    
-    feature_index_id = df[df['YISHUV_STAT11'] == feature_id].index[0]
-    kdf_filter_row = df.loc[feature_index_id].copy().drop(['YISHUV_STAT11'])
-    df.drop(['YISHUV_STAT11'], inplace=True, axis=1)
-    
-    df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
-    fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
-    
-    gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
-    centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names']]
-    gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names' ]]
-
-    centro_filter_row['x'] = centro_filter_row['geometry'].x
-    centro_filter_row['y'] = centro_filter_row['geometry'].y
-    centro_filter_row = centro_filter_row.drop(['cluster', 'geometry'])
-
-    gdf_filter_cluster['x'] = gdf_filter_cluster['geometry'].x
-    gdf_filter_cluster['y'] = gdf_filter_cluster['geometry'].y
-    gdf_filter_cluster.drop(columns = ['cluster', 'geometry'], inplace=True)
-
-    # this is wrong! I should take the closest value to cluster and that should messure the distnace to all the other points, and than take the selectd zone and check it's location
-    # FIX THIS!
-    tree = KDTree(gdf_filter_cluster[['x', 'y']].values)
-
-    # Query KDTree for the 3 nearest neighbors (including the row itself)
-    distances, indices = tree.query(centro_filter_row[['x', 'y']].values, k=len(gdf_filter_cluster))
-    gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
-    gdf_filter_cluster['geo_distance'] = distances
-    
-    gdf_filter_cluster = gdf_filter_cluster.sort_index()
-    df_kmeans = df_kmeans.sort_index()
-
-    # concat the geo distance (mulitipied by 111 to convert to km) and the distance to cluster
-    kmeans_geo_distance = pd.concat([gdf_filter_cluster[['Shem_Yishuv', 'sta_22_names' ,'YISHUV_STAT11', 'geo_distance']], df_kmeans[['distance_to_cluster']]], axis=1)
-    kmeans_geo_distance['geo_distance'] = kmeans_geo_distance['geo_distance']*111
-    selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
-    # feature_index_id
-    
-    fig_scatter = _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict)
-    return fig_bar, fig_scatter
-
-
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), Input('kmeans_scatterplot', 'clickData'), prevent_initial_call=True)
 def zoom_to_feature_by_bar(clickData1, clickData2):
     """Zoom map viewport to selected feature based on bar/scatter plot clicks.
@@ -742,6 +1037,30 @@ def info_hover(feature):
 
 @ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
 def controller(radioButton):
+    """Control visibility of UI components based on selected analysis mode.
+
+    Parameters
+    ----------
+    radioButton : str
+        Selected analysis mode. One of:
+        - 'who_won': Show election winner analysis
+        - 'kdtree': Show k-d tree nearest neighbor analysis  
+        - 'kmeans': Show k-means clustering analysis
+
+    Returns
+    -------
+    list
+        List of 4 style dictionaries controlling visibility and width of:
+        - Near cluster slider div
+        - K-means cluster slider div 
+        - KDE distance barplot div
+        - K-means frequency barplot div
+
+    Notes
+    -----
+    Each style dict contains 'display' property ('none'/'block') and optionally 'width'.
+    Components are shown/hidden based on the selected analysis mode.
+    """
     if radioButton == 'who_won':
         return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
     elif radioButton == 'kdtree':
