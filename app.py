@@ -597,9 +597,9 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
     
     gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
-    centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster']]
-    gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster']]
-    # bookmark kde tree
+    centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names']]
+    gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names' ]]
+
     centro_filter_row['x'] = centro_filter_row['geometry'].x
     centro_filter_row['y'] = centro_filter_row['geometry'].y
     centro_filter_row = centro_filter_row.drop(['cluster', 'geometry'])
@@ -610,10 +610,10 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
 
     # this is wrong! I should take the closest value to cluster and that should messure the distnace to all the other points, and than take the selectd zone and check it's location
     # FIX THIS!
-    tree = KDTree(gdf_filter_cluster.values)
+    tree = KDTree(gdf_filter_cluster[['x', 'y']].values)
 
     # Query KDTree for the 3 nearest neighbors (including the row itself)
-    distances, indices = tree.query(centro_filter_row.values, k=len(gdf_filter_cluster))
+    distances, indices = tree.query(centro_filter_row[['x', 'y']].values, k=len(gdf_filter_cluster))
     gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
     gdf_filter_cluster['geo_distance'] = distances
     
@@ -621,7 +621,8 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     df_kmeans = df_kmeans.sort_index()
 
     # concat the geo distance (mulitipied by 111 to convert to km) and the distance to cluster
-    kmeans_geo_distance = pd.concat([gdf_filter_cluster[['geo_distance']]*111, df_kmeans[['distance_to_cluster']]], axis=1)
+    kmeans_geo_distance = pd.concat([gdf_filter_cluster[['Shem_Yishuv', 'sta_22_names' ,'YISHUV_STAT11', 'geo_distance']], df_kmeans[['distance_to_cluster']]], axis=1)
+    kmeans_geo_distance['geo_distance'] = kmeans_geo_distance['geo_distance']*111
     selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
     # feature_index_id
     # New scatterplot figure comes here
@@ -653,7 +654,18 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
         x1=kmeans_geo_distance['distance_to_cluster'].max(),
         y1=selected_feature_distances_dict['geo_distance'],
         line=dict(color='red', width=1, dash='solid'),
+        # Add hover data showing coordinates
         name='Selected Area'
+    )
+
+    fig_scatter.update_traces(
+            hovertemplate="<br>".join([
+                "Distance to Cluster: %{x:.2f}",
+                "Geographic Distance: %{y:.2f} km",
+                "City: %{customdata[0]}",
+                "Statistical Area: %{customdata[1]}",
+            ]),
+            customdata=kmeans_geo_distance[['Shem_Yishuv', 'sta_22_names', 'YISHUV_STAT11']].values
     )
 
     fig_scatter.update_layout(
