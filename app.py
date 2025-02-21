@@ -350,7 +350,6 @@ col_rename, color_dict_party_index, color_dict_party_name = setup_col_rename_col
 # Prepare spatial data and convert Hebrew column names to English using the dictionary
 stats_data_original_gdf = process_stats_data(stats_data_original_gdf, col_rename)
 
-
 inital_stats_data = stats_data_original_gdf.copy().__geo_interface__
 
 info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info", className="info",
@@ -449,9 +448,76 @@ def controller(radioButton):
         return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
     else:
         return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
-        #Add This display kmeans_frequencybarplot_div
 
+def _prepare_map_layers_for_winner(stats_data, hideout):
+    map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                            dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                            dl.GeoJSON(id='stats_layer', data=stats_data,
+                                    hoverStyle=hover_style,
+                                    style=won_style_handle,
+                                    zoomToBoundsOnClick=True,
+                                    hideout=hideout,
+                            ),
+                            info
+                            ]
+    return map_layers
 
+def _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar):
+    map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+                        dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+                        dl.GeoJSON(id='stats_layer', data=stats_data,
+                                hoverStyle=hover_style,
+                                style=kde_style_handle,
+                                zoomToBoundsOnClick=True,
+                                hideout=hideout,
+                        ),
+                        colorbar,
+                        info
+                        ]
+    return map_layers
+
+def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
+    hideout['colorscale'] = kde_colorscale
+    hideout['classes'] = kde_classes
+    hideout['colorProp'] = 'kde_distance'
+    gdf = get_kdtree(feature=clickData, gdf=stats_data_original_gdf.copy())
+    gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
+    gdf = gdf.iloc[0:kdtree_distance+1]
+    min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
+    stats_data = gdf.__geo_interface__
+    classes_colormap = np.linspace(min_, max_, num=8)
+    ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
+    colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
+    return stats_data, hideout, colorbar, gdf
+
+def _prepare_map_layers_for_kmeans(stats_data, hideout):
+    map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
+            dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
+            dl.GeoJSON(id='stats_layer', data=stats_data,
+                    hoverStyle=hover_style,
+                    style=kmeans_style_handle,
+                    zoomToBoundsOnClick=True,
+                    hideout=hideout,
+            ),
+            info
+            ]
+    return map_layers
+def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
+    gdf = {}
+    kmeans = {}
+    if  os.path.exists(data_store_temp.get('model_stored')):
+        previous_model = joblib.load(data_store_temp.get('model_stored'))
+        if previous_model.n_clusters == kmeans_cluster:
+            # If the number of clusters has changed, flag run the kmeans again
+            gdf = gpd.GeoDataFrame.from_features(map_json['features'])
+            kmeans = previous_model
+    if kmeans == {}:
+        _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
+    return gdf, kmeans
+
+def _remove_model_stored_if_exists(data_store_temp, model_str):
+    if os.path.exists(data_store_temp.get(model_str)):
+            os.remove(data_store_temp.get(model_str))
 
 # Method is too long convert method to main method and send each part to a subroutine
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
@@ -469,95 +535,37 @@ def update_map(map_layers, map_json, elections_won_fig_previous, clickData, radi
     
     if no_data == False:
         elections_won_fig = generate_barplot(clickData)
-        print(elections_won_fig)   
         if radio_map_option =='who_won':
-            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                            dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
-                            dl.GeoJSON(id='stats_layer', data=stats_data,
-                                    hoverStyle=hover_style,
-                                    style=won_style_handle,
-                                    zoomToBoundsOnClick=True,
-                                    hideout=hideout,
-                            ),
-                            info
-                            ]
-            if os.path.exists(data_store_temp.get('model_stored')):
-                os.remove(data_store_temp.get('model_stored'))
+            map_layers = _prepare_map_layers_for_winner(stats_data, hideout)
+            _remove_model_stored_if_exists(data_store_temp, 'model_stored')
 
             return map_layers, data_store_temp, elections_won_fig, {}, {}, {}
        
         elif radio_map_option == 'kdtree':
-            hideout['colorscale'] = kde_colorscale
-            hideout['classes'] = kde_classes
-            hideout['colorProp'] = 'kde_distance'
-            kmeans = {}
-            gdf = get_kdtree(feature=clickData, gdf=stats_data_original_gdf.copy())
-            gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
-            gdf = gdf.iloc[0:kdtree_distance+1]
-            min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
-            stats_data = gdf.__geo_interface__
-            classes_colormap = np.linspace(min_, max_, num=8)
-            ctg = [f"{round(cls,1)}+" for i, cls in enumerate(classes_colormap[:-1])] + [f"{round(classes_colormap[-1],1)}+"]
-            colorbar = dlx.categorical_colorbar(categories= ctg,colorscale=kde_colorscale, width=500, height=30, position="bottomright")
             
-            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                        dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
-                        dl.GeoJSON(id='stats_layer', data=stats_data,
-                                hoverStyle=hover_style,
-                                style=kde_style_handle,
-                                zoomToBoundsOnClick=True,
-                                hideout=hideout,
-                        ),
-                        colorbar,
-                        info
-                        ]
+            kmeans = {}
+            stats_data, hideout, colorbar, gdf = _prepare_map_vairabibles(hideout, clickData, kdtree_distance)
+            map_layers = _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar)
             kde_fig = update_near_clster_bar(gdf, kdtree_distance, radio_map_option)
-            if os.path.exists(data_store_temp.get('model_stored')):
-                os.remove(data_store_temp.get('model_stored'))
+            _remove_model_stored_if_exists(data_store_temp, 'model_stored')
             return map_layers, data_store_temp, elections_won_fig,  kde_fig, {}, {}
         
         else:
-            hideout['color_dict'] = kmeans_color_dict
-            hideout['clusters_col'] = 'cluster'
             # Check if kmeans_cluster value has changed from previous run
-            flag_run_kmeans = True
-            ##### BOOKMARK try to cancel usage of the saved model
-            if  os.path.exists(data_store_temp.get('model_stored')):
-                previous_model = joblib.load(data_store_temp.get('model_stored'))
-                if previous_model.n_clusters == kmeans_cluster:
-                    # If the number of clusters has changed, flag run the kmeans again
-                    gdf = gpd.GeoDataFrame.from_features(map_json['features'])
-                    kmeans = previous_model
-                    flag_run_kmeans = False
-
-            # Run kmeans if the number of clusters has changed
-            if flag_run_kmeans:
-                _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
+            gdf, kmeans = _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json)
 
             # Get the attributes of the KMeans instance
-            stats_data = gdf.__geo_interface__
-            
-            map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
-                        dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
-                        dl.GeoJSON(id='stats_layer', data=stats_data,
-                                hoverStyle=hover_style,
-                                style=kmeans_style_handle,
-                                zoomToBoundsOnClick=True,
-                                hideout=hideout,
-                        ),
-                        info
-                        ]
+            hideout['color_dict'], hideout['clusters_col'], stats_data = kmeans_color_dict, 'cluster', gdf.__geo_interface__
+            map_layers = _prepare_map_layers_for_kmeans(stats_data, hideout)
             fig_bar, fig_scatter = update_kmeans_distance_bar(gdf, clickData, radio_map_option, kmeans)
 
-            
-            # Store the kmeans model in dcc.Store for later use
             # Serialize the model to a byte stream
             joblib.dump(kmeans, 'kmeans_model.joblib')
 
-
-            # Store the byte stream in a variable
+            # Store the kmeans model in dcc.Store for later use
             data_store_temp = {'model_stored':'kmeans_model.joblib'}
-            return map_layers, data_store_temp, elections_won_fig, {}, fig_bar, fig_scatter    
+            return map_layers, data_store_temp, elections_won_fig, {}, fig_bar, fig_scatter 
+           
     if elections_won_fig_previous is None:
         elections_won_fig_previous = {}
     return map_layers, data_store_temp, elections_won_fig_previous, {}, {}, {}
