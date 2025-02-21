@@ -518,6 +518,95 @@ def _remove_model_stored_if_exists(data_store_temp, model_str):
     if os.path.exists(data_store_temp.get(model_str)):
             os.remove(data_store_temp.get(model_str))
 
+
+def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict):
+    fig_scatter = px.scatter(
+        kmeans_geo_distance, 
+        x='distance_to_cluster', 
+        y='geo_distance',
+        labels={
+            'distance_to_cluster': 'Distance to Cluster Center (no units)',
+            'geo_distance': 'Geo Distance (in KM)'
+        },
+        title='Distance Relationships'
+        )
+    # Add crosshair lines for the selected feature
+    fig_scatter.add_shape(
+        type='line',
+        x0=selected_feature_distances_dict['distance_to_cluster'],
+        y0=0,
+        x1=selected_feature_distances_dict['distance_to_cluster'], 
+        y1=kmeans_geo_distance['geo_distance'].max(),
+        line=dict(color='red', width=1, dash='solid'),
+        name='Selected Area'
+    )
+    fig_scatter.add_shape(
+        type='line',
+        x0=0,
+        y0=selected_feature_distances_dict['geo_distance'],
+        x1=kmeans_geo_distance['distance_to_cluster'].max(),
+        y1=selected_feature_distances_dict['geo_distance'],
+        line=dict(color='red', width=1, dash='solid'),
+        # Add hover data showing coordinates
+        name='Selected Area'
+    )
+
+    fig_scatter.update_traces(
+            hovertemplate="<br>".join([
+                "Distance to Cluster: %{x:.2f}",
+                "Geographic Distance: %{y:.2f} km",
+                "City: %{customdata[0]}",
+                "Statistical Area: %{customdata[1]}",
+            ]),
+            customdata=kmeans_geo_distance[['Shem_Yishuv', 'sta_22_names', 'YISHUV_STAT11']].values
+    )
+
+    fig_scatter.update_layout(
+        template='plotly_white',
+        height=300,
+        showlegend=True
+    )
+    # Calculate polynomial regression
+    x = kmeans_geo_distance['distance_to_cluster']
+    y = kmeans_geo_distance['geo_distance']
+    
+    # Fit polynomial of degree 2
+    coeffs = np.polyfit(x, y, 2)
+    polynomial = np.poly1d(coeffs)
+    
+    # Calculate R-squared
+    y_pred = polynomial(x)
+    r2 = 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - y.mean()) ** 2))
+    
+    # Generate points for smooth curve
+    x_smooth = np.linspace(x.min(), x.max(), 200)
+    y_smooth = polynomial(x_smooth)
+    
+    # Add regression line and R² annotation
+    fig_scatter.add_trace(
+        go.Scatter(
+            x=x_smooth,
+            y=y_smooth,
+            mode='lines',
+            showlegend=False,
+            line=dict(color='green', width=2)
+        )
+    )
+    
+    # Add R² annotation above the regression line
+    fig_scatter.add_annotation(
+        x=x_smooth.mean(),
+        y=y_smooth.mean(),
+        text=f'R² = {r2:.3f}',
+        showarrow=False,
+        yshift=20,
+        font=dict(size=12)
+    )
+    fig_scatter.update_xaxes(range=[0, x.max()])
+    fig_scatter.update_yaxes(range=[0, y.max()])
+    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
+    return fig_scatter
+
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
@@ -625,97 +714,11 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     kmeans_geo_distance['geo_distance'] = kmeans_geo_distance['geo_distance']*111
     selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
     # feature_index_id
-    # New scatterplot figure comes here
-    fig_scatter = px.scatter(
-        kmeans_geo_distance, 
-        x='distance_to_cluster', 
-        y='geo_distance',
-        labels={
-            'distance_to_cluster': 'Distance to Cluster Center (no units)',
-            'geo_distance': 'Geo Distance (in KM)'
-        },
-        title='Distance Relationships'
-    )
-
-    # Add crosshair lines for the selected feature
-    fig_scatter.add_shape(
-        type='line',
-        x0=selected_feature_distances_dict['distance_to_cluster'],
-        y0=0,
-        x1=selected_feature_distances_dict['distance_to_cluster'], 
-        y1=kmeans_geo_distance['geo_distance'].max(),
-        line=dict(color='red', width=1, dash='solid'),
-        name='Selected Area'
-    )
-    fig_scatter.add_shape(
-        type='line',
-        x0=0,
-        y0=selected_feature_distances_dict['geo_distance'],
-        x1=kmeans_geo_distance['distance_to_cluster'].max(),
-        y1=selected_feature_distances_dict['geo_distance'],
-        line=dict(color='red', width=1, dash='solid'),
-        # Add hover data showing coordinates
-        name='Selected Area'
-    )
-
-    fig_scatter.update_traces(
-            hovertemplate="<br>".join([
-                "Distance to Cluster: %{x:.2f}",
-                "Geographic Distance: %{y:.2f} km",
-                "City: %{customdata[0]}",
-                "Statistical Area: %{customdata[1]}",
-            ]),
-            customdata=kmeans_geo_distance[['Shem_Yishuv', 'sta_22_names', 'YISHUV_STAT11']].values
-    )
-
-    fig_scatter.update_layout(
-        template='plotly_white',
-        height=300,
-        showlegend=True
-    )
-    # Calculate polynomial regression
-    x = kmeans_geo_distance['distance_to_cluster']
-    y = kmeans_geo_distance['geo_distance']
     
-    # Fit polynomial of degree 2
-    coeffs = np.polyfit(x, y, 2)
-    polynomial = np.poly1d(coeffs)
-    
-    # Calculate R-squared
-    y_pred = polynomial(x)
-    r2 = 1 - (np.sum((y - y_pred) ** 2) / np.sum((y - y.mean()) ** 2))
-    
-    # Generate points for smooth curve
-    x_smooth = np.linspace(x.min(), x.max(), 200)
-    y_smooth = polynomial(x_smooth)
-    
-    # Add regression line and R² annotation
-    fig_scatter.add_trace(
-        go.Scatter(
-            x=x_smooth,
-            y=y_smooth,
-            mode='lines',
-            showlegend=False,
-            line=dict(color='green', width=2)
-        )
-    )
-    
-    # Add R² annotation above the regression line
-    fig_scatter.add_annotation(
-        x=x_smooth.mean(),
-        y=y_smooth.mean(),
-        text=f'R² = {r2:.3f}',
-        showarrow=False,
-        yshift=20,
-        font=dict(size=12)
-    )
-    fig_scatter.update_xaxes(range=[0, x.max()])
-    fig_scatter.update_yaxes(range=[0, y.max()])
-    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
-
-    #### !!!! RETURTN DCCC.GRAP
+    fig_scatter = _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict)
     return fig_bar, fig_scatter
-    
+
+
 @ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), Input('kmeans_scatterplot', 'clickData'), prevent_initial_call=True)
 def zoom_to_feature_by_bar(clickData1, clickData2):
     stat = -1
