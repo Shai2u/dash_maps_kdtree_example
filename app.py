@@ -584,11 +584,6 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     feature_id = -1
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
-
-    if 'cluster' not in gdf.columns:
-        return {}, {}
-    if 0 not in gdf['cluster'].unique():
-        return {}, {}
     
     df = gdf.copy()
     df = df.drop(['geometry', 'Shem_Yishuv_English',
