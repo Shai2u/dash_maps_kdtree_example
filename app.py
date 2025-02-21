@@ -716,14 +716,18 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     #### !!!! RETURTN DCCC.GRAP
     return fig_bar, fig_scatter
     
-@ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), prevent_initial_call=True)
-def zoom_to_feature_by_bar(clickData):
-    if clickData is not None:
-        stat = clickData['points'][0]['customdata'][0]
-        centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
-        return dict(center=[centroid.y, centroid.x], zoom=15, transition="flyTo")
+@ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), Input('kmeans_scatterplot', 'clickData'), prevent_initial_call=True)
+def zoom_to_feature_by_bar(clickData1, clickData2):
+    stat = -1
+    if clickData1 is not None:
+        stat = clickData1['points'][0]['customdata'][0]
+    elif clickData2 is not None:
+        stat = clickData2['points'][0]['customdata'][-1]
     else:
         return {}
+    centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
+    return dict(center=[centroid.y, centroid.x], zoom=15, transition="flyTo")
 
+    
 if __name__ == '__main__':
     app.run_server(debug=True)
