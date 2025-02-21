@@ -519,7 +519,6 @@ def _remove_model_stored_if_exists(data_store_temp, model_str):
     if os.path.exists(data_store_temp.get(model_str)):
             os.remove(data_store_temp.get(model_str))
 
-# Method is too long convert method to main method and send each part to a subroutine
 @ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
 def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
