@@ -454,9 +454,9 @@ def controller(radioButton):
 
 
 # Method is too long convert method to main method and send each part to a subroutine
-@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
+@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
 Input('kmeans_cluster', 'value'))
-def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
+def update_map(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
     hideout = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}
     no_data = False
     data_store_temp = {'model_stored':'kmeans_model.joblib'}
@@ -469,6 +469,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
     
     if no_data == False:
         elections_won_fig = generate_barplot(clickData)
+        print(elections_won_fig)   
         if radio_map_option =='who_won':
             map_layers = [dl.TileLayer(url='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'),
                             dl.LocateControl(locateOptions={'enableHighAccuracy': True}),
@@ -484,6 +485,7 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
                 os.remove(data_store_temp.get('model_stored'))
 
             return map_layers, data_store_temp, elections_won_fig, {}, {}, {}
+       
         elif radio_map_option == 'kdtree':
             hideout['colorscale'] = kde_colorscale
             hideout['classes'] = kde_classes
@@ -556,8 +558,9 @@ def update_map(map_layers, map_json, clickData, radio_map_option, kdtree_distanc
             # Store the byte stream in a variable
             data_store_temp = {'model_stored':'kmeans_model.joblib'}
             return map_layers, data_store_temp, elections_won_fig, {}, fig_bar, fig_scatter    
-
-    return map_layers, data_store_temp, {}, {}, {}, {}
+    if elections_won_fig_previous is None:
+        elections_won_fig_previous = {}
+    return map_layers, data_store_temp, elections_won_fig_previous, {}, {}, {}
 
 
 def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
