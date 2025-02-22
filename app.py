@@ -1098,4 +1098,4 @@ def controller(radioButton):
         return [{'display':'none'}, {'width': '50%', 'display':'block'},{'display':'none'}, {'display':'block'}]
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
