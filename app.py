@@ -702,12 +702,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     )
     fig_scatter.update_xaxes(range=[0, x.max()])
     fig_scatter.update_yaxes(range=[0, y.max()])
-    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14))
-    fig_scatter.update_layout(
-        template='plotly_white',
-        height=300,
-        showlegend=True
-    )
+    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14), template='plotly_white',height=300, showlegend = False)
     return fig_scatter
 
 
@@ -1101,9 +1096,9 @@ def controller(radioButton):
     if radioButton == 'who_won':
         return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
     elif radioButton == 'kdtree':
-        return [{'width': '60%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
+        return [{'width': '50%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
     else:
-        return [{'display':'none'}, {'width': '60%', 'display':'block'},{'display':'none'}, {'display':'block'}]
+        return [{'display':'none'}, {'width': '50%', 'display':'block'},{'display':'none'}, {'display':'block'}]
 
 if __name__ == '__main__':
     app.run_server(debug=True)
