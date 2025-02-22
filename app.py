@@ -881,7 +881,9 @@ app.layout = html.Div(children=[
     html.Div(
         [
             html.Div([
-                html.H4("Map Analysis Options"),
+                html.Div([
+
+ html.H4("\"Near things are more related than distant things\" ?"),
                 html.Div([
                 html.Div(dcc.RadioItems(
                     id='raio_map_analysis',
