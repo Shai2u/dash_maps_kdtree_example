@@ -257,7 +257,6 @@ def generate_election_barplot_fig(feature=None):
         Bar plot figure showing top 6 parties by votes
 
     """
-    print('feature: ', feature)
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     else:
