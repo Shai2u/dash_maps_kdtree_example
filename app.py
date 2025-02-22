@@ -276,7 +276,7 @@ def generate_election_barplot_fig(feature=None):
     percent = selected_row.values/selected_row.values.sum()
 
     # Prepare barplot
-    top_ten = pd.Series(percent[0:6], index=selected_row.index[0:6])
+    top_ten = pd.Series(percent[0:8], index=selected_row.index[0:8])
     top_ten = top_ten[top_ten.values > 0]
     # Generate random data
     categories = top_ten.index
