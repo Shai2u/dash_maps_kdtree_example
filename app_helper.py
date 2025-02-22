@@ -49,5 +49,5 @@ kmeans_color_dict = {0: '#FF5733',
                     9: '#39FFAA'}
 map_analysis_radio_options = [
     {'label': 'Who Won', 'value': 'who_won'},
-    {'label': 'Kdtree', 'value': 'kdtree'},
-    {'label': 'Kmeans', 'value': 'kmeans'}]
+    {'label': 'KD-Tree', 'value': 'kdtree'},
+    {'label': 'K-Means', 'value': 'kmeans'}]
