@@ -287,7 +287,7 @@ def generate_election_barplot_fig(feature=None):
         xaxis_tickangle=-90,
         yaxis=dict(range=[0, top_ten.max()+0.1 if top_ten.max()
                    > 0.5 else 0.5], visible=False),
-        height=300,
+        height=350,
         showlegend=False,
         template='plotly_white',
         xaxis_showgrid=False,
@@ -342,11 +342,9 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
         title_x=0.6, 
         font=dict(size=14),
         bargap=0.1,
-        height=300,
-
+        height=350,
     )
     
-
     return fig
 
 def get_kmeans_euclidian_distance(df, filter_row, kmeans):
@@ -701,7 +699,7 @@ def _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_dista
     )
     fig_scatter.update_xaxes(range=[0, x.max()])
     fig_scatter.update_yaxes(range=[0, y.max()])
-    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14), template='plotly_white',height=300, showlegend = False)
+    fig_scatter.update_layout(margin=dict(l=0, r=0, t=0, b=0), title_y=0.9, title_x=0.6, font=dict(size=14), template='plotly_white',height=350, showlegend = False)
     return fig_scatter
 
 
