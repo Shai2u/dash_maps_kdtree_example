@@ -243,8 +243,8 @@ def build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance):
 
     return fig
 
-def generate_barplot_fig(feature=None):
-    """Generate bar plot showing top 6 parties by votes.
+def generate_election_barplot_fig(feature=None):
+    """Generate bar plot showing top 8 parties by votes.
 
     Parameters
     ----------
@@ -1001,7 +1001,7 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
     hideout, data_store_temp, stats_data = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}, {'model_stored':'kmeans_model.joblib'}, {}
     if clickData is not None:
         stats_data = stats_data_original_gdf.copy().__geo_interface__
-        elections_won_fig = generate_barplot_fig(clickData)
+        elections_won_fig = generate_election_barplot_fig(clickData)
         if radio_map_option =='who_won':
             map_layers = _prepare_map_layers_for_winner(stats_data, hideout)
             _remove_model_stored_if_exists(data_store_temp, 'model_stored')
