@@ -155,7 +155,7 @@ sqlparse==0.5.1
 srsly==2.4.8
 statsmodels==0.14.4
 sympy==1.13.1
-=tensorboard==2.18.0
+tensorboard==2.18.0
 tensorboard-data-server==0.7.2
 tensorflow==2.18.0
 tensorflow-hub==0.16.1
