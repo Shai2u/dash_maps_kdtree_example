@@ -1,4 +1,6 @@
-# 🗺️ Dash Maps KDTree Example
+# 🗺️ Near things are more related than distant things?
+
+![Screenshot](./media/screenshot.png)
 
 This minimal Dash Plotly app uses dash-leaflet to visualize statistical areas in Israel and explore voting patterns. When a user clicks on a statistical area, the app displays other areas in Israel that are closest in terms of voting attributes, utilizing a KDTree for efficient nearest-neighbor searches. A similarity index is shown as a histogram/bar plot, which illustrates how similar the selected area is to other statistical areas, with a line chart showing a scale from 0 (closest) to 1 (furthest).
 
@@ -17,3 +19,4 @@ Requirements (to be detailed)
 - GeoPandas (optional, for additional geospatial data processing)
 
 Installation (to be detailed)
+
