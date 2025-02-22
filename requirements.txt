@@ -4,22 +4,13 @@ alabaster==1.0.0
 alembic==1.13.3
 aniso8601==9.0.1
 annotated-types==0.7.0
-appnope @ file:///Users/ktietz/ci_310/appnope_1643965056645/work
-asttokens @ file:///opt/conda/conda-bld/asttokens_1646925590279/work
 astunparse==1.6.3
-attrs @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_73lbj1xbpc/croot/attrs_1729089415510/work
 babel==2.16.0
-blinker @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_d64vvpf_j3/croot/blinker_1696539070114/work
 blis==0.7.11
-branca @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_9avimpxt3z/croot/branca_1675157616739/work
-Brotli @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_27zk0eqdh0/croot/brotli-split_1714483157007/work
 cachelib==0.9.0
 cachetools==5.5.0
 catalogue==2.0.10
-certifi @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_d8j59rqun5/croot/certifi_1734473289913/work/certifi
 chardet==5.2.0
-charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
-click @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_61srkg7e2e/croot/click_1698129815327/work
 click-plugins==1.1.1
 cligj==0.7.2
 cloudpathlib==0.19.0
@@ -27,7 +18,6 @@ cloudpickle==3.0.0
 colorama==0.4.6
 colorlog==6.8.2
 colour==0.1.5
-comm @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_3doui0bmzb/croot/comm_1709322861485/work
 confection==0.1.5
 contextily==1.6.2
 contourpy==1.2.1
@@ -44,27 +34,17 @@ dash-leaflet==1.0.15
 dash-table==5.0.0
 databricks-sdk==0.32.3
 dataclass-wizard==0.30.1
-debugpy @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_563_nwtkoc/croot/debugpy_1690905063850/work
-decorator @ file:///opt/conda/conda-bld/decorator_1643638310831/work
 Deprecated==1.2.14
 dnspython==2.7.0
 docker==7.1.0
 docutils==0.21.2
 dtreeviz==2.2.2
-duckdb @ file:///Users/runner/miniforge3/conda-bld/python-duckdb-split_1717684854653/work/tools/pythonpkg
 EditorConfig==0.17.0
-en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl#sha256=86cc141f63942d4b2c5fcee06630fd6f904788d2f0ab005cce45aadb8fb73889
-en-core-web-trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.7.3/en_core_web_trf-3.7.3-py3-none-any.whl#sha256=f72abb34bdf174876bd4267b29b2501677e605e0a251fdc56c163003182ed68b
 et_xmlfile==2.0.0
-exceptiongroup @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_b2258scr33/croot/exceptiongroup_1706031391815/work
-executing @ file:///opt/conda/conda-bld/executing_1646925071911/work
-fastjsonschema @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_43a0jaiddu/croots/recipe/python-fastjsonschema_1661368628129/work
 filelock==3.15.4
 fiona==1.10.1
-Flask @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_b6zka5i2cn/croot/flask_1716545886197/work
 Flask-Caching==2.3.0
 flatbuffers==24.3.25
-folium @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_dbu2s156o8/croot/folium_1675353411719/work
 fonttools==4.53.1
 fsspec==2024.6.1
 fuzzywuzzy==0.18.0
@@ -85,23 +65,10 @@ grpcio==1.68.0
 gunicorn==23.0.0
 h11==0.14.0
 h5py==3.12.1
-idna @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a12xpo84t2/croot/idna_1714398852854/work
 imagesize==1.4.1
 importlib_metadata==8.4.0
 iniconfig==2.0.0
-ipykernel @ file:///Users/runner/miniforge3/conda-bld/ipykernel_1719845458456/work
-ipython @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_f02dzd_ff3/croot/ipython_1718287987043/work
-ipywidgets @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_39zatljc3t/croot/ipywidgets_1709574695265/work
-itsdangerous @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_00jdi1gu23/croot/itsdangerous_1716533346702/work
-jedi @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_194648shy3/croot/jedi_1721058355221/work
-Jinja2 @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_b15nuwux5r/croot/jinja2_1730902833938/work
-joblib @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_8ff7uji0v2/croot/joblib_1718217225309/work
 jsbeautifier==1.15.1
-jsonschema @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_27o3go8sqa/croot/jsonschema_1699041627313/work
-jsonschema-specifications @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_d38pclgu95/croot/jsonschema-specifications_1699032390832/work
-jupyter_client @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_58w2siozyz/croot/jupyter_client_1699455907045/work
-jupyter_core @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_73nomeum4p/croot/jupyter_core_1718818302815/work
-jupyterlab-widgets @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_fddtfxabwc/croot/jupyterlab_widgets_1709322895191/work
 keras==3.6.0
 kiwisolver==1.4.5
 langcodes==3.4.1
@@ -113,9 +80,7 @@ mapclassify==2.8.0
 marisa-trie==1.2.0
 Markdown==3.7
 markdown-it-py==3.0.0
-MarkupSafe @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_a84ni4pci8/croot/markupsafe_1704206002077/work
 matplotlib==3.9.1
-matplotlib-inline @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_f6fdc0hldi/croots/recipe/matplotlib-inline_1662014472341/work
 mdurl==0.1.2
 mercantile==1.2.1
 ml-dtypes==0.4.1
@@ -126,8 +91,6 @@ more-itertools==10.5.0
 mpmath==1.3.0
 murmurhash==1.0.10
 namex==0.0.8
-nbformat @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_cbnf5nccgk/croot/nbformat_1694616744196/work
-nest-asyncio @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_310vb5e2a0/croot/nest-asyncio_1708532678212/work
 networkx==3.3
 numpy==1.26.4
 openpyxl==3.1.5
@@ -139,57 +102,38 @@ optree==0.13.1
 optuna==4.0.0
 osmnx==2.0.0
 outcome==1.3.0.post0
-packaging @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_81ri4yfpjw/croot/packaging_1720101866878/work
 pandas==2.2.2
-parso @ file:///opt/conda/conda-bld/parso_1641458642106/work
 patsy==0.5.6
 pb-tool==3.1.0
-pexpect @ file:///tmp/build/80754af9/pexpect_1605563209008/work
 pillow==10.4.0
 pipenv==2024.4.0
-platformdirs @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a8u4fy8k9o/croot/platformdirs_1692205661656/work
-plotly @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_763albhi7w/croot/plotly_1718136945704/work
 pluggy==1.5.0
 preshed==3.0.9
-prompt-toolkit @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_c63v4kqjzr/croot/prompt-toolkit_1704404354115/work
 protobuf==5.28.2
-psutil @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_1310b568-21f4-4cb0-b0e3-2f3d31e39728k9coaga5/croots/recipe/psutil_1656431280844/work
 psycopg2-binary==2.9.10
-ptyprocess @ file:///tmp/build/80754af9/ptyprocess_1609355006118/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
-pure-eval @ file:///opt/conda/conda-bld/pure_eval_1646925070566/work
 pyarrow==17.0.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 pydantic==2.10.4
 pydantic_core==2.27.2
-Pygments @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_29bs9f_dh9/croot/pygments_1684279974747/work
 pymongo==4.10.1
 pyogrio==0.9.0
 pyparsing==3.1.2
 pyproj==3.6.1
-PySocks @ file:///Users/ktietz/ci_310/pysocks_1643961536721/work
 pytest==8.3.2
-python-dateutil @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_66ud1l42_h/croot/python-dateutil_1716495741162/work
 python-Levenshtein==0.26.1
 pytz==2024.1
 PyYAML==6.0.2
-pyzmq @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_43pxpbos3z/croot/pyzmq_1705605108344/work
 RapidFuzz==3.10.1
 rasterio==1.4.2
-referencing @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_5cz64gsx70/croot/referencing_1699012046031/work
 regex==2024.9.11
-requests @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_ee45nsd33z/croot/requests_1730999134038/work
 retrying==1.3.4
 rich==13.8.1
-rpds-py @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_f8jkozoefm/croot/rpds-py_1698945944860/work
 rsa==4.9
-scikit-learn @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_97o1ht3oty/croot/scikit-learn_1721921878202/work
-scipy @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_b9t0odioph/croot/scipy_1717521487325/work/dist/scipy-1.13.1-cp310-cp310-macosx_11_0_arm64.whl#sha256=8741f7b22165ee615e9ecfd6d218381ea80d42f8be4f94e9e6c96e67edb6f43c
 seaborn==0.13.2
 selenium==4.27.1
 shapely==2.0.6
 shellingham==1.5.4
-six @ file:///tmp/build/80754af9/six_1644875935023/work
 smart-open==7.0.4
 smmap==5.0.1
 sniffio==1.3.1
@@ -209,11 +153,9 @@ sphinxcontrib-serializinghtml==2.0.0
 SQLAlchemy==2.0.35
 sqlparse==0.5.1
 srsly==2.4.8
-stack-data @ file:///opt/conda/conda-bld/stack_data_1646927590127/work
 statsmodels==0.14.4
 sympy==1.13.1
-tenacity @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_e4laqy9gpr/croot/tenacity_1721222508993/work
-tensorboard==2.18.0
+=tensorboard==2.18.0
 tensorboard-data-server==0.7.2
 tensorflow==2.18.0
 tensorflow-hub==0.16.1
@@ -223,13 +165,10 @@ termcolor==2.5.0
 tf_keras==2.18.0
 thinc==8.2.5
 thinc_apple_ops==0.1.5
-threadpoolctl @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_efa5bvb6vi/croot/threadpoolctl_1719407806403/work
 tomli==2.0.1
 torch==2.5.1
 torchvision==0.20.1
-tornado @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_a4w03z48br/croot/tornado_1718740114858/work
 tqdm==4.66.5
-traitlets @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_500m2_1wyk/croot/traitlets_1718227071952/work
 trio==0.27.0
 trio-websocket==0.11.1
 typer==0.12.5
@@ -237,11 +176,9 @@ typing_extensions==4.12.2
 tzdata==2024.1
 urllib3==2.2.2
 wasabi==1.1.3
-wcwidth @ file:///Users/ktietz/demo/mc3/conda-bld/wcwidth_1629357192024/work
 weasel==0.4.1
 websocket-client==1.8.0
 Werkzeug==3.0.4
-widgetsnbextension @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_b5bomtx272/croot/widgetsnbextension_1709322879675/work
 wrapt==1.16.0
 wsproto==1.2.0
 wurlitzer==3.1.1
