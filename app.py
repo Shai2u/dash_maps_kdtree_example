@@ -865,7 +865,7 @@ info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info
                 style={"position": "absolute", "top": "10px", "right": "10px", "zIndex": "1000"})
 
 
-app = Dash(title="Similar to me")
+app = Dash(title="Near things are more related than distant things?")
 app.css.append_css({
     'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
 })
