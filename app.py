@@ -866,6 +866,8 @@ info = html.Div(children=get_info(feature=None, col_rename=col_rename), id="info
 
 
 app = Dash(title="Near things are more related than distant things?")
+server = app.server
+
 app.css.append_css({
     'external_url': 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap'
 })
