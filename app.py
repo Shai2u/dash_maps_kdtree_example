@@ -113,7 +113,7 @@ def setup_col_rename_color_dicts(heb_dict_df: pd.DataFrame) -> tuple[dict, dict,
     color_dict_party_name = heb_dict_df.T.set_index(1).loc['labor':][2].to_dict()   
     return col_rename, color_dict_party_index, color_dict_party_name
 
-def get_kdtree(gdf: gpd.GeoDataFrame, feature: str) -> gpd.GeoDataFrame:
+def get_kdtree_distance(gdf: gpd.GeoDataFrame, feature: str) -> gpd.GeoDataFrame:
     """Build KD-tree from voting data and find nearest neighbors to selected feature.
 
     Parameters
@@ -139,17 +139,20 @@ def get_kdtree(gdf: gpd.GeoDataFrame, feature: str) -> gpd.GeoDataFrame:
     5. Finds distances to all other features
     6. Returns original GeoDataFrame with added distances
     """
+    # Get the row for the selected feature
     kdf_filter_row = gdf[gdf['YISHUV_STAT11'] == feature["properties"]["YISHUV_STAT11"]].iloc[0]
-    kde_df = gdf.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-                       'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
-    kdf_filter_row = kdf_filter_row.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
-                                          'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'])
-    # 3. Normalize the data
+    
+    # Drop non-numeric columns from both selected row and full dataset
+    labels_to_drop= ['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
+                       'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label']
+    kde_df = gdf.drop(labels_to_drop, axis=1).copy()
+    kdf_filter_row = kdf_filter_row.drop(labels_to_drop)
+
+    # Normalize the data
     kde_df = kde_df.apply(
         lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
     kdf_filter_row = (kdf_filter_row/kdf_filter_row['bzb']).drop('bzb')
 
-    # random_stat = kde_df.sample(1).values
     # Build the KDTree
     tree = KDTree(kde_df.values)
 
@@ -167,7 +170,7 @@ def get_kmeans_cluster_add_column(n_cluster, stats_map_data_gdf):
     df = df.drop(['geometry', 'YISHUV_STAT11', 'Shem_Yishuv_English',
             'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
-    # 3. Normalize the data
+    # Normalize the data
     df = df.apply(
         lambda p: p/p['bzb'], axis=1).drop('bzb', axis=1)
     df_kmeans = df.copy()
@@ -314,10 +317,6 @@ def generate_histogram_with_line(df_kmeans, eu_distance):
         Histogram figure with vertical line at Euclidean distance
 
     """
-    # Plot histogram of df_kmeans distances using Plotly
-    # fig = px.histogram(df_kmeans, x='distance_to_cluster', nbins=30, title='Histogram of Distances to Cluster Center')
-
-    # x = fig.data[0].x
     # Create 30 bins
     hist, bin_edges = np.histogram(df_kmeans['distance_to_cluster'], bins=30)
 
@@ -368,17 +367,21 @@ def get_kmeans_euclidian_distance(df, filter_row, kmeans):
     tuple
         Tuple containing:
     """
+    # Normalize the filter row by the total votes
     filter_row = (filter_row/filter_row['bzb']).drop('bzb')
+    # Drop the columns that are not needed and check if they exist
     for col in ['votes', 'invalid_votes', 'valid_votes','kde_distance', 'cluster', 'id']:
         if col in filter_row.index:
             filter_row.drop(col, inplace=True)
+    # Get the attributes of the selected center cluster
     selected_cluster = kmeans.predict(filter_row.values.reshape(1, -1))[0]
+    # Drop the cluster column
     df_subset = df[df['cluster'] == selected_cluster].drop(columns='cluster').copy()
     if 'cluster' in df_subset.columns:
         df_subset.drop(columns='cluster', inplace=True)
     # Get the attributes of the selected center cluster
     selected_cluster_attributes = kmeans.__dict__['cluster_centers_'][selected_cluster]
-        
+    # Normalize the dataframe by the total votes
     df_subset = df_subset.apply(lambda p: p/p['bzb'], axis=1)
 
     # Build the KDTree for the single cluster subset
@@ -518,7 +521,7 @@ def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
     hideout['colorscale'] = kde_colorscale
     hideout['classes'] = kde_classes
     hideout['colorProp'] = 'kde_distance'
-    gdf = get_kdtree(feature=clickData, gdf=stats_data_original_gdf.copy())
+    gdf = get_kdtree_distance(feature=clickData, gdf=stats_data_original_gdf.copy())
     gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
     gdf = gdf.iloc[0:kdtree_distance+1]
     min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
@@ -554,6 +557,7 @@ def _prepare_map_layers_for_kmeans(stats_data, hideout):
             info
             ]
     return map_layers
+
 def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
     """Prepare GeoDataFrame and KMeans model for k-means analysis.
 
@@ -575,6 +579,7 @@ def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
     if  os.path.exists(data_store_temp.get('model_stored')):
         previous_model = joblib.load(data_store_temp.get('model_stored'))
         if previous_model.n_clusters == kmeans_cluster:
+
             # If the number of clusters has changed, flag run the kmeans again
             gdf = gpd.GeoDataFrame.from_features(map_json['features'])
             kmeans = previous_model
@@ -738,11 +743,14 @@ def update_near_clster_bar(gdf, kdtree_distance, radio_map_option):
     else:
         # Convert GeoJSON data to GeoDataFrame
         gdf = gdf[gdf['kde_distance']>0].reset_index(drop=True)
+
         # Generate a barplot based on the KDE distances
         gdf_sorted = gdf.sort_values(by='kde_distance').iloc[0:kdtree_distance]
-        # gdf_sorted['name_stat'] = gdf_sorted['Shem_Yishuv'] + '-' + gdf_sorted['sta_22_names']
+
+        # Concatenate settlement name and stats
         gdf_sorted['name_stat'] = gdf_sorted.apply(lambda p: p['Shem_Yishuv']+'-'+ p['sta_22_names'] if len(p['sta_22_names'])>0 else  p['Shem_Yishuv']+'-' + str(p['YISHUV_STAT11'])[-3:], axis=1) 
 
+        # Generate the bar plot
         fig_kde = build_near_clsuter_bar_fig(gdf_sorted, kdtree_distance)
         
         return fig_kde
@@ -780,52 +788,71 @@ def update_kmeans_distance_bar(gdf, feature, radio_map_option, kmeans_model):
     3. Calculates geographic distances using KDTree
     4. Creates scatter plot comparing geographic vs cluster distances
     """
+
+    # if the radio button is not kmeans, return empty figures
     if radio_map_option != 'kmeans':
         return {}, {}
+    # set a variable to store the feature id
     feature_id = -1
+
+    # if the feature is not None, set the feature id to the feature id
     if feature is not None:
         feature_id = feature["properties"]["YISHUV_STAT11"]
     
+    # prepare the dataframe for the kmeans analysis, and detect the selected feature
     df = gdf.copy()
     df = df.drop(['geometry', 'Shem_Yishuv_English',
         'Shem_Yishuv', 'Shem_Yishuv', 'sta_22_names', 'max_label'], axis=1).copy()
     
+    # get the index of the selected feature
     feature_index_id = df[df['YISHUV_STAT11'] == feature_id].index[0]
+    
+    # drop the stats from the dataframe
     kdf_filter_row = df.loc[feature_index_id].copy().drop(['YISHUV_STAT11'])
     df.drop(['YISHUV_STAT11'], inplace=True, axis=1)
     
+    # get the kmeans and the euclidean distance
     df_kmeans, eu_distance = get_kmeans_euclidian_distance(df , kdf_filter_row, kmeans_model)
     fig_bar = generate_histogram_with_line(df_kmeans, eu_distance)
     
+    # in order to get the geo distance, extract the centroids of the dataframe
     gdf_centroids = gdf.copy().assign(geometry=gdf.centroid)
+
+    # get the centroid of feature that is nearest to the cluster
     centro_filter_row = gdf_centroids.loc[df_kmeans['distance_to_cluster'].idxmin(), ['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names']]
     gdf_filter_cluster = gdf_centroids.iloc[df_kmeans.index].copy()[['geometry', 'cluster', 'YISHUV_STAT11', 'Shem_Yishuv', 'sta_22_names' ]]
 
+    # get the x and y coordinates of the feature that is nearest to the centroid
     centro_filter_row['x'] = centro_filter_row['geometry'].x
     centro_filter_row['y'] = centro_filter_row['geometry'].y
     centro_filter_row = centro_filter_row.drop(['cluster', 'geometry'])
 
+    # ge the x, y of the the other features
     gdf_filter_cluster['x'] = gdf_filter_cluster['geometry'].x
     gdf_filter_cluster['y'] = gdf_filter_cluster['geometry'].y
     gdf_filter_cluster.drop(columns = ['cluster', 'geometry'], inplace=True)
 
-    # this is wrong! I should take the closest value to cluster and that should messure the distnace to all the other points, and than take the selectd zone and check it's location
-    # FIX THIS!
+
+    # calculate the duclidian distance between the feature and the other features using KDTree
     tree = KDTree(gdf_filter_cluster[['x', 'y']].values)
 
-    # Query KDTree for the 3 nearest neighbors (including the row itself)
+    # Query KDTree for nearest neighbors (including the row itself)
     distances, indices = tree.query(centro_filter_row[['x', 'y']].values, k=len(gdf_filter_cluster))
     gdf_filter_cluster = gdf_filter_cluster.iloc[indices].copy()
     gdf_filter_cluster['geo_distance'] = distances
     
+    # sort the dataframe by the index so, it can be concantednated on the x axis
     gdf_filter_cluster = gdf_filter_cluster.sort_index()
     df_kmeans = df_kmeans.sort_index()
 
-    # concat the geo distance (mulitipied by 111 to convert to km) and the distance to cluster
+    # concat the geo distance and the distance to cluster (attribute distance)
     kmeans_geo_distance = pd.concat([gdf_filter_cluster[['Shem_Yishuv', 'sta_22_names' ,'YISHUV_STAT11', 'geo_distance']], df_kmeans[['distance_to_cluster']]], axis=1)
+    
+    # convert the geo distance to km by multiplying by 111
     kmeans_geo_distance['geo_distance'] = kmeans_geo_distance['geo_distance']*111
+
+    # the dict will be used to generate the scatter plot
     selected_feature_distances_dict = kmeans_geo_distance.loc[feature_index_id].to_dict()
-    # feature_index_id
     
     fig_scatter = _generate_kmeans_scatterplot_fig(kmeans_geo_distance, selected_feature_distances_dict)
     return fig_bar, fig_scatter
