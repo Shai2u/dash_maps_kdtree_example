@@ -913,12 +913,15 @@ app.layout = html.Div(children=[
                 ),id='kmeans_cluster_div', style={'width': '60%', 'display':'none'}),
 
                 ],style={
-                    'display': 'flex', 'width': '100%', 'justify-content': 'space-between'}),
-                dcc.Graph(id='elections_barplot'), 
-                html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}),
-                html.Div([dcc.Graph(id='kmeans_distance_barplot'), dcc.Graph(id='kmeans_scatterplot')],id='kmeans_frequencybarplot_div', style={'display':'none'}) ], style={
-                    'display': 'inline-block', 'width': '30%', 'verticalAlign': 'top',
-                'minWidth': '200px', 'margin-right': '2%'}),
+                    'display': 'flex', 'width': '100%', 'justify-content': 'space-between'})
+
+                ],className="div-card"),
+               
+                html.Div(dcc.Graph(id='elections_barplot'),className="div-card"), 
+                html.Div(dcc.Graph(id='kde_distance_barplot'),id='kde_distance_barplot_div', style={'display':'none'}, className="div-card"),
+                html.Div([dcc.Graph(id='kmeans_distance_barplot'), dcc.Graph(id='kmeans_scatterplot')],id='kmeans_frequencybarplot_div', style={'display':'none'}, className="div-card") ], style={
+                    'display': 'inline-block', 'width': '40%', 'verticalAlign': 'top',
+                'minWidth': '200px'}),
             html.Div([
                 dl.Map([
                     dl.TileLayer(
@@ -946,7 +949,7 @@ app.layout = html.Div(children=[
                     boxZoom=True,
                 )
 
-            ], style={'display': 'inline-block', 'width': '60%', 'verticalAlign': 'top', 'margin-left': '2%'}
+            ], style={'display': 'inline-block', 'width': '59%', 'verticalAlign': 'top'}, className="div-card"
             )
         ],
     ),
