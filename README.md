@@ -93,7 +93,13 @@ To efficiently calculate the Euclidean distance in N-dimensional space, I used a
 
 I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool that allows me to elevate dashboards to an interactive, game-like experience and achieve things that would be difficult, if not impossible, in traditional BI tools like Tableau or Power BI. For example, if I wanted to run K-Means or K-D Trees on the fly in Power BI, I’d face numerous challenges. But with Dash-Plotly, I have the full power of Python at my fingertips. In this section, I’d like to share some technical tips and explain how I overcame some challenges during the dashboard-building process.
 
-(Continue adding content here)
+
+## Multiple Views/Scnearios Based on Different Configurations
+One of the powerful features that sets Dash-Plotly apart from drag-and-drop BI applications is the ability to control the UI using code. In this dashboard, I dynamically show or hide UI elements based on the selected method—whether it’s K-Means, K-D Tree, or simply displaying voting results. Another important aspect is the ability to modify both the functionality and the content displayed on the map based on user selections.
+
+Some tips to for tackeling multiple views and scenarios in the dashbaord:
+1. 
+
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
@@ -102,6 +108,12 @@ I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool th
     - Sateralizing a model
 - working with two way callbacks, where the map controls the graph and the graph controls the map
 - Using the Map layer is the source of data
+
+Dash apps tend to become very long and messy, often resembling spaghetti code. To keep your code clean and maintainable, consider the following:
+	1.	Refactor, Refactor, Refactor! Continuously improve and restructure your code.
+	2.	Step Away and Reevaluate – If your code becomes too long and difficult to follow, take a break for a few days. When you return, review it with a bird’s-eye view and logically restructure it.
+	3.	Use External Files for Configuration and Reusable Methods – If you have configuration variables or general-purpose methods that aren’t directly tied to your app’s logic, move them to separate files. Keep your functions short, clear, and well-structured, avoiding deep hierarchical complexity.
+    4. .	Don’t hesitate to use GPT agents to restructure your code, add comments, write docstrings, and format your document properly. It’s a real time-saver!
 
 In this post, I explored K-D Trees and K-Means as methods to examine attribute Euclidean distance and tested whether it’s related to geographic distances. The value of using K-D Trees, K-Means, or a combination of both lies in the ability to test similarity across multiple dimensions (i.e., the attribute dimensions). Based on a quick exploration of Israel, it appears there isn’t a strong correlation between geography and voting trends.
 
