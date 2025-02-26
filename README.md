@@ -98,8 +98,20 @@ I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool th
 One of the powerful features that sets Dash-Plotly apart from drag-and-drop BI applications is the ability to control the UI using code. In this dashboard, I dynamically show or hide UI elements based on the selected method—whether it’s K-Means, K-D Tree, or simply displaying voting results. Another important aspect is the ability to modify both the functionality and the content displayed on the map based on user selections.
 
 Some tips to for tackeling multiple views and scenarios in the dashbaord:
-1. 
+1. 	To control the views (what is displayed and what is hidden), I borrowed a concept from JavaScript—toggling the visibility of Div elements. This is done by adding an output callback to one of the Div elements and modifying its style attribute.
 
+
+Python'''
+@ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
+def controller(radioButton):
+    if radioButton == 'who_won':
+        return [{'display':'none'},{'display':'none'}, {'display':'none'}, {'display':'none'}]
+    elif radioButton == 'kdtree':
+        return [{'width': '50%', 'display':'block'}, {'display':'none'}, {'display':'block'}, {'display':'none'}]
+    else:
+        return [{'display':'none'}, {'width': '50%', 'display':'block'},{'display':'none'}, {'display':'block'}]
+
+'''
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
