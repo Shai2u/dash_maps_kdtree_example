@@ -94,12 +94,11 @@ To efficiently calculate the Euclidean distance in N-dimensional space, I used a
 I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool that allows me to elevate dashboards to an interactive, game-like experience and achieve things that would be difficult, if not impossible, in traditional BI tools like Tableau or Power BI. For example, if I wanted to run K-Means or K-D Trees on the fly in Power BI, I’d face numerous challenges. But with Dash-Plotly, I have the full power of Python at my fingertips. In this section, I’d like to share some technical tips and explain how I overcame some challenges during the dashboard-building process.
 
 
-## Multiple Views/Scnearios Based on Different Configurations
+## Multiple Views/Scenarios Based on Different Configurations
 One of the powerful features that sets Dash-Plotly apart from drag-and-drop BI applications is the ability to control the UI using code. In this dashboard, I dynamically show or hide UI elements based on the selected method—whether it’s K-Means, K-D Tree, or simply displaying voting results. Another important aspect is the ability to modify both the functionality and the content displayed on the map based on user selections.
 
 Some tips to for tackeling multiple views and scenarios in the dashbaord:
 1. 	To control the views (what is displayed and what is hidden), I borrowed a concept from JavaScript—toggling the visibility of Div elements. This is done by adding an output callback to one of the Div elements and modifying its style attribute.
-
 
 Python'''
 @ app.callback(Output("near_cluster_div", "style"), Output("kmeans_cluster_div", "style"), Output("kde_distance_barplot_div", "style"), Output("kmeans_frequencybarplot_div","style"), Input('raio_map_analysis', 'value'))
@@ -112,6 +111,12 @@ def controller(radioButton):
         return [{'display':'none'}, {'width': '50%', 'display':'block'},{'display':'none'}, {'display':'block'}]
 
 '''
+
+2. Return empty figures to avoid processing
+Even though I have a dedicated callback that decides which divs will be displayed and which are not.
+I used another callback method that returns all the figures for all the app scnearios and views,
+why did I use one callback method for all configuration and not unique callback for each configuration?
+Even though this might make the method look longer and more cumbersome the logic have having less callback methods is to avoid as much as possible multiple callbacks whenever there is a change in the app configuration, once we have multiple callbacks, we have multiple data running in parallel in the app, something that makes the flow of data more complciated to control and can lead to multiple version of the data passing to the callback methods, here I prefer to avoid as much as I can parallelness, expecially if we have a chain of calculations we need to pipe togehter.
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
