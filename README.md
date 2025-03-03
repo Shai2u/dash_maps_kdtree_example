@@ -114,15 +114,15 @@ def controller(radioButton):
 
 2. Return empty figures to avoid processing
 Even though I have a dedicated callback that decides which divs will be displayed and which are not.
-I used another callback method that returns all the figures for all the app scnearios and views,
+I used another callback method that returns all the figures for all the app scenarios and views,
 why did I use one callback method for all configuration and not unique callback for each configuration?
-Even though this might make the method look longer and more cumbersome the logic have having less callback methods is to avoid as much as possible multiple callbacks whenever there is a change in the app configuration, once we have multiple callbacks, we have multiple data running in parallel in the app, something that makes the flow of data more complciated to control and can lead to multiple version of the data passing to the callback methods, here I prefer to avoid as much as I can parallelness, expecially if we have a chain of calculations we need to pipe togehter.
+Even though this might make the method look longer and more cumbersome the logic have having less callback methods is to avoid as much as possible multiple callbacks whenever there is a change in the app configuration, once we have multiple callbacks, we have multiple data running in parallel in the app, something that makes the flow of data more complicated to control and can lead to multiple version of the data passing to the callback methods, here I prefer to avoid as much as I can parallelness???, especially if we have a chain of calculations we need to pipe togehter.
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
     - Working with multiple map-layers configurations based on the scenario
 - Avoiding extensive runs by examining the state of the model.
-    - Sateralizing a model
+    - Sateralizing??? a model
 - working with two way callbacks, where the map controls the graph and the graph controls the map
 - Using the Map layer is the source of data
 
