@@ -97,7 +97,7 @@ I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool th
 ## Multiple Views/Scenarios Based on Different Configurations
 One of the powerful features that sets Dash-Plotly apart from drag-and-drop BI applications is the ability to control the UI using code. In this dashboard, I dynamically show or hide UI elements based on the selected method—whether it’s K-Means, K-D Tree, or simply displaying voting results. Another important aspect is the ability to modify both the functionality and the content displayed on the map based on user selections.
 
-Some tips to for tackeling multiple views and scenarios in the dashbaord:
+Some tips for tackeling multiple views and scenarios in the dashbaord:
 1. 	To control the views (what is displayed and what is hidden), I borrowed a concept from JavaScript—toggling the visibility of Div elements. This is done by adding an output callback to one of the Div elements and modifying its style attribute.
 
 Python'''
@@ -116,7 +116,7 @@ def controller(radioButton):
 Even though I have a dedicated callback that decides which divs will be displayed and which are not.
 I used another callback method that returns all the figures for all the app scenarios and views,
 why did I use one callback method for all configuration and not unique callback for each configuration?
-Even though this might make the method look longer and more cumbersome the logic have having less callback methods is to avoid as much as possible multiple callbacks whenever there is a change in the app configuration, once we have multiple callbacks, we have multiple data running in parallel in the app, something that makes the flow of data more complicated to control and can lead to multiple version of the data passing to the callback methods, here I prefer to avoid as much as I can parallelness???, especially if we have a chain of calculations we need to pipe togehter.
+Even though this approach might make the method appear longer and more complex, the main idea behind reducing the number of callback methods is to minimize redundant callbacks whenever the app configuration changes. When multiple callbacks run in parallel, it becomes more difficult to control the data flow, potentially leading to inconsistencies and multiple versions of the data being processed simultaneously. To maintain a clear and structured flow, I prefer to minimize parallel execution, especially when dealing with a sequence of calculations that need to be piped together.
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
