@@ -113,10 +113,11 @@ def controller(radioButton):
 '''
 
 2. Return empty figures to avoid processing
-Even though I have a dedicated callback that decides which divs will be displayed and which are not.
-I used another callback method that returns all the figures for all the app scenarios and views,
-why did I use one callback method for all configuration and not unique callback for each configuration?
-Even though this approach might make the method appear longer and more complex, the main idea behind reducing the number of callback methods is to minimize redundant callbacks whenever the app configuration changes. When multiple callbacks run in parallel, it becomes more difficult to control the data flow, potentially leading to inconsistencies and multiple versions of the data being processed simultaneously. To maintain a clear and structured flow, I prefer to minimize parallel execution, especially when dealing with a sequence of calculations that need to be piped together.
+Even though I have a dedicated callback that determines which divs are displayed and which are hidden, I use another callback method to generate all the figures for every app scenario and view.
+
+Why did I choose a single callback for all configurations instead of a separate callback for each one?
+
+While this approach might make the method appear longer and more complex, the key reason for reducing the number of callbacks is to minimize redundancy when the app configuration changes. When multiple callbacks run in parallel, controling the data flow becomes more difficult, potentially leading to inconsistencies and multiple versions of the data being processed simultaneously. To maintain a clear and structured flow, I prefer to minimize parallel execution—especially when dealing with a sequence of calculations that need to be piped together.
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
