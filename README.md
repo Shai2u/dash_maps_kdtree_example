@@ -112,15 +112,15 @@ def controller(radioButton):
 
 '''
 2. Centrelize callbacks as much as possible
-Even though I have a dedicated callback that determines which divs are displayed and which are hidden, I used another callback method to generate all the figures for every app scenario and view.
-Why did I choose a single callback for all configurations instead of a separate callback for each one?
-While this approach might make the method appear longer and more complex, the key reason for reducing the number of callbacks is to minimize redundancy when the app configuration changes. When multiple callbacks run in parallel, controling the data flow becomes more difficult, potentially leading to inconsistencies and redundant calls of the data being processed simultaneously. 
+I use a single callback to generate all figures for every app scenario instead of separate callbacks to reduce redundancy and maintain a structured data flow. This prevents parallel execution issues, avoiding inconsistencies and redundant data processing when the app configuration changes.
 
 3. Return empty figures to avoid processing
-To maintain a clear and structured flow, I prefer to minimize parallel execution—especially when dealing with a sequence of calculations that need to be piped together.  To avoid unnecessary calculations caused by different app configurations, In my centralized figures callback app (point 2. above) use a radio button input to determine which components need to be actively calculated (using a simple if statement). For all other components, I simply return an empty set ({}) within the same callback method.Since I have a separate callback method managing which divs are visible, this approach provides an elegant solution—not only hiding unneeded graphs but also preventing their unnecessary processing.
+In Plotly Dash, returning empty figures (e.g., go.Figure() or {}) for inactive components helps avoid unnecessary computations and improves performance. This ensures that only relevant graphs are processed, reducing load time and preventing errors from rendering unnecessary data.
 
 4. Use the map layers as an input for data
-.....
+In Plotly Dash, it’s better to store data within components (such as dcc.Store) rather than using global variables. This ensures that the app remains stateless, avoiding issues with concurrent users and unintended data modifications. By storing the map layer data as JSON inside a the map-layers with dash-leaflet, you can safely retrieve, analyze, and update it without affecting other users or interfering with the app’s global state.
+
+
 gdf = gpd.GeoDataFrame.from_features(map_json['features'])
 
 - Multiple Scenarios in the app.
