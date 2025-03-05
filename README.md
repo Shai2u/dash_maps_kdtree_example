@@ -111,11 +111,17 @@ def controller(radioButton):
         return [{'display':'none'}, {'width': '50%', 'display':'block'},{'display':'none'}, {'display':'block'}]
 
 '''
-
-2. Return empty figures to avoid processing
+2. Centrelize callbacks as much as possible
 Even though I have a dedicated callback that determines which divs are displayed and which are hidden, I used another callback method to generate all the figures for every app scenario and view.
 Why did I choose a single callback for all configurations instead of a separate callback for each one?
-While this approach might make the method appear longer and more complex, the key reason for reducing the number of callbacks is to minimize redundancy when the app configuration changes. When multiple callbacks run in parallel, controling the data flow becomes more difficult, potentially leading to inconsistencies and multiple versions of the data being processed simultaneously. To maintain a clear and structured flow, I prefer to minimize parallel execution—especially when dealing with a sequence of calculations that need to be piped together. To avoid unnecessary calculations caused by different app configurations, I return an empty set ({}) within the same callback method. Since I have a separate callback method managing which divs are visible, this approach provides an elegant solution—not only hiding unneeded graphs but also preventing their unnecessary processing.
+While this approach might make the method appear longer and more complex, the key reason for reducing the number of callbacks is to minimize redundancy when the app configuration changes. When multiple callbacks run in parallel, controling the data flow becomes more difficult, potentially leading to inconsistencies and redundant calls of the data being processed simultaneously. 
+
+3. Return empty figures to avoid processing
+To maintain a clear and structured flow, I prefer to minimize parallel execution—especially when dealing with a sequence of calculations that need to be piped together.  To avoid unnecessary calculations caused by different app configurations, In my centralized figures callback app (point 2. above) use a radio button input to determine which components need to be actively calculated (using a simple if statement). For all other components, I simply return an empty set ({}) within the same callback method.Since I have a separate callback method managing which divs are visible, this approach provides an elegant solution—not only hiding unneeded graphs but also preventing their unnecessary processing.
+
+4. Use the map layers as an input for data
+.....
+gdf = gpd.GeoDataFrame.from_features(map_json['features'])
 
 - Multiple Scenarios in the app.
     - Hiding and showing the right div - returning empty divs
