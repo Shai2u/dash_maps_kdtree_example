@@ -4,7 +4,7 @@
 # Near things are more related than distant things? (Part 1)
 
 
-This post is part of a series of geo-dashboard articles I wrote. If you have no expierence in Dash-plotly or dash-leaflet I suggest you look at: **10 Steps to Build a Geo-Dashboard with Dash-Plotly and Dash-Leaflet Maps.** Anyhow I love building geographic maps with Dash-Plotly because it allows me to quickly create and deploy somewhat complex interactive mapping user experiences and prototype my ideas in my favorite programming language, Python, while achieving React-like qualities.
+This post is part of a series of geo-dashboard articles I wrote. If you have no/some expierence in Dash-plotly or dash-leaflet I suggest you look at: **10 Steps to Build a Geo-Dashboard with Dash-Plotly and Dash-Leaflet Maps.** Anyhow I love building geographic maps with Dash-Plotly because it allows me to quickly create and deploy somewhat complex interactive mapping user experiences and prototype my ideas in my favorite programming language, Python, while achieving React-like qualities.
 
 In this post, I decided to take a more scientific approach and challenge the famous “First Law of Geography”: “Near things are more related than distant things” (Waldo Tobler).
 
@@ -20,15 +20,14 @@ In this way, I could determine which neighborhood(s) are most similar to mine an
 •	Examine the correlation between the lack of amenities and neighborhoods with similar characteristics.
 •	Open a new business in neighborhoods similar to those where business ventures have yielded successful revenues.
 •	Identify geographic/attribute patterns in areas that have experienced specific crimes or received specific 311 complaints.
-•	Looking for a place to move? Examine neighborhoods that meet similar criteria to your reference area.
+•	Looking for a place to move? Examine neighborhoods that meet similar criteria to your reference area, and test if they are clustered or randomly distributed.
 
 Let’s return to the scientific side of what I did in this dashboard — challenging the first law of geography. To do this, I applied two very different techniques:
 1.	Examining attribute similarity using a K-D Tree, an efficient geographical algorithm for measuring Euclidean distance.
 2.	Applying K-Means clustering to the attributes of the features, a technique that groups features around a set number of cluster centers.
 
-I used the results of Israel’s elections and aggregated them into statistical areas. The central question I sought to answer was: Are attribute similarity distances correlated with geographic distances?
+I used the results of Israel’s Knesset elections and aggregated them into statistical areas. The central question I sought to answer was: Are attribute similarity distances correlated with geographic distances?
 
-Now, I will dive into the scientific and statistical aspects of my work, and afterwards, I’ll explain the techniques I used to build this dashboard.
 
 **Scientific/Statistical Techniques Explained:**
 
@@ -38,7 +37,7 @@ A K-D Tree is an efficient way to compute Euclidean distances between geographic
 
 Using a K-D Tree, I could select a specific statistical area (or neighborhood) and treat it as the “center,” then calculate the relative distance to all other statistical areas.
 
-For example, let’s say I live in central Tel Aviv, where 39% voted for “Yesh Atid,” 16% for “Meretz,” and 15% for “Labor,” and so on. I could then look at all other statistical areas in Israel and find those with the most similar voting patterns, regardless of geographic distance. This would allow me to identify neighborhoods in Haifa, for instance, that share similar voting attributes.
+For example, let’s say I live in central Tel Aviv, where 39% voted for “Yesh Atid”, 16% for “Meretz”, and 15% for “Labor”, and so on. I could then look at all other statistical areas in Israel and find those with the most similar voting patterns, regardless of geographic distance. This would allow me to identify neighborhoods in Haifa, for instance, that share similar voting attributes. Thus it's possible that central Tel Aviv and some neighborhood in Haifa might share some other attribute charactersitings while the physical distance betewen the neighborhoods is roughly 100 km.
 
 **K-Means**
 
@@ -54,7 +53,6 @@ In this exercise, I used K-Means to identify natural clusters with similar votin
 
 To efficiently calculate the Euclidean distance in N-dimensional space, I used a K-D Tree, which allows for quick distance computations on the fly.
 
-**Some Technical tips and challenges I encounter while building this dashboard.**
 
 I really enjoy exploring Dash-Plotly (and dash-leaflet) because it’s a tool that allows me to elevate dashboards to an interactive, game-like experience and achieve things that would be difficult, if not impossible, in traditional BI tools like Tableau or Power BI. For example, if I wanted to run K-Means or K-D Trees on the fly in Power BI, I’d face numerous challenges. But with Dash-Plotly, I have the full power of Python at my fingertips. In this section, I’d like to share some technical tips and explain how I overcame some challenges during the dashboard-building process.
 
@@ -71,3 +69,6 @@ As with my previous posts (and future ones), I love finding ways to implement Da
 
 I believe attribute similarity has great potential and practical applications. I’d love to hear your ideas in the comments. The code for this project can be found in the repository.
 
+
+Caveates,
+I could have also added to this assesment another test - such examining if the distribution is random or normalzied or clustered. I think I will leave for another time
