@@ -11,9 +11,17 @@ In the first part, I focus on the scientific and statistical aspects, and this p
 
 In this dashboard, I chose to examine the correlation between physical geographic distance and “attribute distance”. While the results don’t provide a clear academic conclusion, they do offer some intuition for answering the question: “Are near things more related than distant things?”
 
-If you haven't read this first part ()[] if you choose to skip the read here is the TL;DR version.
-(Add apart about the dashboard)
+My intention in building this dashboard is:
+1. Practice concept of Data Science in spatial related fields
+2. Have a platform to protytype my ideas and innovations
+3. push the boundries of dash-leaflet as I see that There is not enough literture on this intresting and promising module.
+4. As I am learning and practicing React, I have an alternative framework which I already feel comfrotable with and that I can practice my vision.
 
+If you haven't read this first part ()[] if you choose to skip the read here is the TL;DR version.
+The Dashbaord acts a 3 spatial-data apps in one, each app is displayed with a click on a context radio-button
+1. Descriptive of voting distribution for each statistical area, Where the map shows the winning party
+2. Attribute similarity bar chart, with attirbute similarity map, the map is colored by a gradient that represnt similarity.
+3. Kmenas cluster for similar groups, the bar chart displays a scatterplot of geographic distance and attribute distance to clsuter center and the map shows the cluster groups.
 
 A bit about the dashboard (describe the dashboard here with some animations)
 
@@ -30,6 +38,11 @@ c. Kmeans - examine all the statistical areas for a specific cluster how far the
 3. contextual figures - these figures changed based on the radio control button selected from part 1.
 4. Map - the color themse of the map and it's behaivor is also detemriend by the contetxtual radio button in part 1.
 In this section, I’d like to share some technical tips and explain how I overcame some challenges during the dashboard-building process.
+
+Part of the chllanges I had to face with building this app and I will elaborate here will be:
+1. How to work with a 3 in 1 app, the ability to change context.
+2. Avoiding unessary processes when the app context changed
+3. How to pipe the data in the right order in circular situations (clicking on a map will both update the bar chart, and the map itself!)
 
 
 ## Multiple Views/Scenarios Based on Different Configurations
