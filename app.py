@@ -494,14 +494,14 @@ def _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar):
                         ]
     return map_layers
 
-def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
+def _prepare_map_vairabibles(hideout, click_data, kdtree_distance, gdf_copy ):
     """Prepare map variables for k-d tree analysis.
 
     Parameters
     ----------
     hideout : dict
         Dictionary containing map settings
-    clickData : dict
+    click_data : dict
         Dictionary containing click data
     kdtree_distance : int
         Number of nearest neighbors to show
@@ -518,7 +518,7 @@ def _prepare_map_vairabibles(hideout, clickData, kdtree_distance):
     hideout['colorscale'] = kde_colorscale
     hideout['classes'] = kde_classes
     hideout['colorProp'] = 'kde_distance'
-    gdf = get_kdtree_distance(feature=clickData, gdf=stats_data_original_gdf.copy())
+    gdf = get_kdtree_distance(feature=click_data, gdf=gdf_copy)
     gdf = gdf.sort_values(by='kde_distance').reset_index(drop=True)
     gdf = gdf.iloc[0:kdtree_distance+1]
     min_, max_ = gdf['kde_distance'].min(), gdf['kde_distance'].max()
@@ -555,7 +555,7 @@ def _prepare_map_layers_for_kmeans(stats_data, hideout):
             ]
     return map_layers
 
-def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
+def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json, gdf_copy):
     """Prepare GeoDataFrame and KMeans model for k-means analysis.
 
     Parameters
@@ -575,13 +575,13 @@ def _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json):
     kmeans = {}
     if  os.path.exists(data_store_temp.get('model_stored')):
         previous_model = joblib.load(data_store_temp.get('model_stored'))
+        # If the number of clusters has stayed constant don't run kmeans again
         if previous_model.n_clusters == kmeans_cluster:
-
-            # If the number of clusters has changed, flag run the kmeans again
+            # Trick - to avoid rerurrning th kmeans model we can take the result from the map_json
             gdf = gpd.GeoDataFrame.from_features(map_json['features'])
             kmeans = previous_model
     if kmeans == {}:
-        _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, stats_data_original_gdf.copy())
+        _, gdf,  kmeans =  get_kmeans_cluster_add_column(kmeans_cluster, gdf_copy)
     return gdf, kmeans
 
 def _remove_model_stored_if_exists(data_store_temp, model_str):
@@ -952,9 +952,26 @@ app.layout = html.Div(children=[
 ])
 
 
-@ app.callback(Output('env_map', 'children'), Output('temp-data-store', 'data'), Output('elections_barplot', 'figure'), Output('kde_distance_barplot', 'figure'), Output('kmeans_distance_barplot', 'figure'), Output('kmeans_scatterplot', 'figure'), Input('env_map', 'children'), State('stats_layer', 'data'), State('elections_barplot', 'figure'), Input('stats_layer', 'clickData'), Input('raio_map_analysis', 'value'), Input('near_cluster', 'value'), 
+@ app.callback(Output('env_map', 'children'),
+               Output('temp-data-store', 'data'),
+               Output('elections_barplot', 'figure'),
+               Output('kde_distance_barplot', 'figure'),
+               Output('kmeans_distance_barplot', 'figure'),
+               Output('kmeans_scatterplot', 'figure'),
+               Input('env_map', 'children'),
+               State('stats_layer', 'data'),
+               State('elections_barplot', 'figure'),
+               Input('stats_layer', 'click_data'),
+               Input('raio_map_analysis', 'value'),
+                 Input('near_cluster', 'value'),
 Input('kmeans_cluster', 'value'))
-def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickData, radio_map_option, kdtree_distance, kmeans_cluster):
+def update_map_widgets(map_layers,
+                       map_json,
+                       elections_won_fig_previous,
+                       click_data,
+                       radio_map_option,
+                       kdtree_distance,
+                       kmeans_cluster):
     """Update map widgets based on user interactions and selected analysis mode.
 
     Parameters
@@ -965,7 +982,7 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
         GeoJSON data for the map
     elections_won_fig_previous : dict
         Previous elections results figure
-    clickData : dict
+    click_data : dict
         Data from clicked location on map
     radio_map_option : str
         Selected analysis mode ('who_won', 'kdtree', or 'kmeans')
@@ -998,9 +1015,9 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
     - 'kmeans': Shows clustering analysis using KMeans
     """
     hideout, data_store_temp, stats_data = {"color_dict":color_dict_party_index, "style":style, "hoverStyle":hover_style, 'win_party':"max_label"}, {'model_stored':'kmeans_model.joblib'}, {}
-    if clickData is not None:
+    if click_data is not None:
         stats_data = stats_data_original_gdf.copy().__geo_interface__
-        elections_won_fig = generate_election_barplot_fig(clickData)
+        elections_won_fig = generate_election_barplot_fig(click_data)
         if radio_map_option =='who_won':
             map_layers = _prepare_map_layers_for_winner(stats_data, hideout)
             _remove_model_stored_if_exists(data_store_temp, 'model_stored')
@@ -1008,7 +1025,7 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
        
         elif radio_map_option == 'kdtree':
             kmeans = {}
-            stats_data, hideout, colorbar, gdf = _prepare_map_vairabibles(hideout, clickData, kdtree_distance)
+            stats_data, hideout, colorbar, gdf = _prepare_map_vairabibles(hideout, click_data, kdtree_distance, stats_data_original_gdf.copy())
             map_layers = _prepare_map_layers_for_kdtree(stats_data, hideout, colorbar)
             kde_fig = update_near_clster_bar(gdf, kdtree_distance, radio_map_option)
             _remove_model_stored_if_exists(data_store_temp, 'model_stored')
@@ -1016,12 +1033,12 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
         
         else:
             # Check if kmeans_cluster value has changed from previous run
-            gdf, kmeans = _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json)
+            gdf, kmeans = _prepare_gdf_kmeans_model(data_store_temp, kmeans_cluster, map_json, stats_data_original_gdf.copy())
 
             # Get the attributes of the KMeans instance
             hideout['color_dict'], hideout['clusters_col'], stats_data = kmeans_color_dict, 'cluster', gdf.__geo_interface__
             map_layers = _prepare_map_layers_for_kmeans(stats_data, hideout)
-            fig_bar, fig_scatter = update_kmeans_distance_bar(gdf, clickData, radio_map_option, kmeans)
+            fig_bar, fig_scatter = update_kmeans_distance_bar(gdf, click_data, radio_map_option, kmeans)
 
             # Serialize the model to a byte stream
             joblib.dump(kmeans, 'kmeans_model.joblib')
@@ -1034,15 +1051,15 @@ def update_map_widgets(map_layers, map_json, elections_won_fig_previous, clickDa
         elections_won_fig_previous = {}
     return map_layers, data_store_temp, elections_won_fig_previous, {}, {}, {}
 
-@ app.callback(Output('env_map', 'viewport'), Input('kde_distance_barplot', 'clickData'), Input('kmeans_scatterplot', 'clickData'), prevent_initial_call=True)
-def zoom_to_feature_by_bar(clickData1, clickData2):
+@ app.callback(Output('env_map', 'viewport'),Input('kde_distance_barplot', 'click_data'), Input('kmeans_scatterplot', 'click_data'), prevent_initial_call=True)
+def zoom_to_feature_by_bar(click_data1, click_data2):
     """Zoom map viewport to selected feature based on bar/scatter plot clicks.
     
     Parameters
     ----------
-    clickData1 : dict or None
+    click_data1 : dict or None
         Click data from KDE distance bar plot
-    clickData2 : dict or None
+    click_data2 : dict or None
         Click data from KMeans scatter plot
         
     Returns
@@ -1052,10 +1069,10 @@ def zoom_to_feature_by_bar(clickData1, clickData2):
         animation. Empty dict if no valid click data.
     """
     stat = -1
-    if clickData1 is not None:
-        stat = clickData1['points'][0]['customdata'][0]
-    elif clickData2 is not None:
-        stat = clickData2['points'][0]['customdata'][-1]
+    if click_data1 is not None:
+        stat = click_data1['points'][0]['customdata'][0]
+    elif click_data2 is not None:
+        stat = click_data2['points'][0]['customdata'][-1]
     else:
         return {}
     centroid = stats_data_original_gdf[stats_data_original_gdf['YISHUV_STAT11'] == stat].iloc[0]['geometry'].centroid
